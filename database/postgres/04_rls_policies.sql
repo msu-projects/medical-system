@@ -23,12 +23,42 @@ SET search_path TO clinic, public;
 -- --------------------------------------------------------
 CREATE OR REPLACE FUNCTION clinic.current_app_user_id()
 RETURNS INT AS $$
+DECLARE
+    v_user_id INT;
+    v_role TEXT;
+    v_expected_db_role TEXT;
 BEGIN
-    RETURN NULLIF(current_setting('app.current_user_id', true), '')::INT;
+    v_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INT;
+    v_role := NULLIF(current_setting('app.current_role', true), '');
+
+    IF v_user_id IS NULL OR v_role IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    IF v_role NOT IN ('admin', 'doctor', 'nurse', 'student', 'faculty') THEN
+        RETURN NULL;
+    END IF;
+
+    v_expected_db_role := 'clinic_' || v_role;
+    IF current_user <> v_expected_db_role THEN
+        RETURN NULL;
+    END IF;
+
+    PERFORM 1
+    FROM clinic.users u
+    WHERE u.user_id = v_user_id
+      AND u.role = v_role
+      AND u.is_active = TRUE;
+
+    IF NOT FOUND THEN
+        RETURN NULL;
+    END IF;
+
+    RETURN v_user_id;
 EXCEPTION
     WHEN OTHERS THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
 COMMENT ON FUNCTION clinic.current_app_user_id() IS
     'Returns the current application user_id from session variable, or NULL if not set.';
@@ -36,12 +66,27 @@ COMMENT ON FUNCTION clinic.current_app_user_id() IS
 -- Helper function: Get current app role safely
 CREATE OR REPLACE FUNCTION clinic.current_app_role()
 RETURNS TEXT AS $$
+DECLARE
+    v_role TEXT;
 BEGIN
-    RETURN NULLIF(current_setting('app.current_role', true), '');
+    v_role := NULLIF(current_setting('app.current_role', true), '');
+    IF v_role IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    IF v_role NOT IN ('admin', 'doctor', 'nurse', 'student', 'faculty') THEN
+        RETURN NULL;
+    END IF;
+
+    IF current_user <> ('clinic_' || v_role) THEN
+        RETURN NULL;
+    END IF;
+
+    RETURN v_role;
 EXCEPTION
     WHEN OTHERS THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
 -- Helper function: Get student_id for current user
 CREATE OR REPLACE FUNCTION clinic.current_student_id()
@@ -54,7 +99,7 @@ BEGIN
     WHERE user_id = clinic.current_app_user_id();
     RETURN sid;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
 -- ============================================================================
 -- ENABLE RLS ON ALL CLINICAL TABLES

@@ -59,8 +59,6 @@ Extended profile for users with `role = 'student'`. One-to-one with `clinic.user
 | `student_id` | `SERIAL` | PK | Auto-incrementing primary key |
 | `user_id` | `INT` | NOT NULL, UNIQUE, FK → `users.user_id` | Links to the student's user account (CASCADE DELETE) |
 | `student_number` | `VARCHAR(20)` | NOT NULL, UNIQUE | School-issued student ID number |
-| `first_name` | `VARCHAR(50)` | NOT NULL | Student's first name |
-| `last_name` | `VARCHAR(50)` | NOT NULL | Student's last name |
 | `date_of_birth` | `DATE` | — | Date of birth |
 | `sex` | `VARCHAR(10)` | CHECK | One of: `Male`, `Female`, `Other` |
 | `contact_number` | `VARCHAR(20)` | — | Student's contact number |
@@ -73,7 +71,7 @@ Extended profile for users with `role = 'student'`. One-to-one with `clinic.user
 | `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT `NOW()` | Record creation timestamp |
 | `updated_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT `NOW()` | Last modification timestamp (auto-updated via trigger) |
 
-**Indexes:** `idx_students_student_number`, `idx_students_last_name`, `idx_students_year_section`
+**Indexes:** `idx_students_student_number`, `idx_students_year_section`
 
 ---
 
@@ -282,7 +280,6 @@ Two columns in `clinic.consultations` and two in `clinic.prescriptions` are stor
 | `idx_users_username` | `users` | `username` | Login lookup |
 | `idx_users_is_active` | `users` | `is_active` | Active account filtering |
 | `idx_students_student_number` | `students` | `student_number` | Student ID search |
-| `idx_students_last_name` | `students` | `last_name` | Name search |
 | `idx_students_year_section` | `students` | `year_level, section` | Class list queries |
 | `idx_qr_codes_token` | `qr_codes` | `qr_token` | Partial — active tokens only |
 | `idx_consultations_student` | `consultations` | `student_id` | Patient history lookup |

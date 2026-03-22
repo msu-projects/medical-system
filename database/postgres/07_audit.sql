@@ -43,11 +43,11 @@ CREATE TABLE IF NOT EXISTS audit.activity_log (
 );
 
 -- Index for common audit queries
-CREATE INDEX idx_audit_table     ON audit.activity_log (table_schema, table_name);
-CREATE INDEX idx_audit_operation ON audit.activity_log (operation);
-CREATE INDEX idx_audit_user      ON audit.activity_log (app_user_id);
-CREATE INDEX idx_audit_timestamp ON audit.activity_log (changed_at);
-CREATE INDEX idx_audit_composite ON audit.activity_log (table_name, changed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_table     ON audit.activity_log (table_schema, table_name);
+CREATE INDEX IF NOT EXISTS idx_audit_operation ON audit.activity_log (operation);
+CREATE INDEX IF NOT EXISTS idx_audit_user      ON audit.activity_log (app_user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit.activity_log (changed_at);
+CREATE INDEX IF NOT EXISTS idx_audit_composite ON audit.activity_log (table_name, changed_at DESC);
 
 COMMENT ON TABLE  audit.activity_log             IS 'Immutable audit trail — every change to clinical data is logged here';
 COMMENT ON COLUMN audit.activity_log.old_data     IS 'Previous row state as JSONB (NULL for INSERT)';
@@ -66,7 +66,6 @@ DECLARE
     old_json    JSONB := NULL;
     new_json    JSONB := NULL;
     changed     TEXT[] := NULL;
-    col         TEXT;
     app_uid     TEXT;
 BEGIN
     -- Get application-level user identity (set by the app per-transaction)
@@ -132,7 +131,7 @@ BEGIN
         RETURN NEW;
     END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, audit, clinic;
 
 COMMENT ON FUNCTION audit.fn_audit_trigger() IS
     'Generic audit trigger — logs INSERT/UPDATE/DELETE with before/after state as JSONB. SECURITY DEFINER allows all roles to generate audit entries.';
@@ -143,41 +142,49 @@ COMMENT ON FUNCTION audit.fn_audit_trigger() IS
 -- Using AFTER triggers so we audit what actually happened (post-constraint checks).
 
 -- clinic.users
+DROP TRIGGER IF EXISTS trg_audit_users ON clinic.users;
 CREATE TRIGGER trg_audit_users
     AFTER INSERT OR UPDATE OR DELETE ON clinic.users
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
 -- clinic.students
+DROP TRIGGER IF EXISTS trg_audit_students ON clinic.students;
 CREATE TRIGGER trg_audit_students
     AFTER INSERT OR UPDATE OR DELETE ON clinic.students
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
 -- clinic.qr_codes
+DROP TRIGGER IF EXISTS trg_audit_qr_codes ON clinic.qr_codes;
 CREATE TRIGGER trg_audit_qr_codes
     AFTER INSERT OR UPDATE OR DELETE ON clinic.qr_codes
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
 -- clinic.consultations
+DROP TRIGGER IF EXISTS trg_audit_consultations ON clinic.consultations;
 CREATE TRIGGER trg_audit_consultations
     AFTER INSERT OR UPDATE OR DELETE ON clinic.consultations
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
 -- clinic.prescriptions
+DROP TRIGGER IF EXISTS trg_audit_prescriptions ON clinic.prescriptions;
 CREATE TRIGGER trg_audit_prescriptions
     AFTER INSERT OR UPDATE OR DELETE ON clinic.prescriptions
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
 -- clinic.medicines
+DROP TRIGGER IF EXISTS trg_audit_medicines ON clinic.medicines;
 CREATE TRIGGER trg_audit_medicines
     AFTER INSERT OR UPDATE OR DELETE ON clinic.medicines
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
 -- clinic.consultation_medicines
+DROP TRIGGER IF EXISTS trg_audit_consultation_medicines ON clinic.consultation_medicines;
 CREATE TRIGGER trg_audit_consultation_medicines
     AFTER INSERT OR UPDATE OR DELETE ON clinic.consultation_medicines
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
 -- clinic.health_clearances
+DROP TRIGGER IF EXISTS trg_audit_health_clearances ON clinic.health_clearances;
 CREATE TRIGGER trg_audit_health_clearances
     AFTER INSERT OR UPDATE OR DELETE ON clinic.health_clearances
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();

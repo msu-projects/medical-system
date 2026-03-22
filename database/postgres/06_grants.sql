@@ -46,6 +46,10 @@ REVOKE ALL ON ALL SEQUENCES IN SCHEMA clinic FROM PUBLIC;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA clinic FROM PUBLIC;
 REVOKE ALL ON SCHEMA clinic FROM PUBLIC;
 
+ALTER DEFAULT PRIVILEGES IN SCHEMA clinic REVOKE ALL ON TABLES FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA clinic REVOKE ALL ON SEQUENCES FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA clinic REVOKE ALL ON FUNCTIONS FROM PUBLIC;
+
 -- ============================================================================
 -- STEP 2: Grant schema usage (some roles need re-grant after revoke)
 -- ============================================================================
@@ -70,8 +74,8 @@ GRANT USAGE ON SEQUENCE clinic.health_clearances_clearance_id_seq TO clinic_facu
 -- Encryption/decryption helpers — needed by roles that read/write encrypted data
 GRANT EXECUTE ON FUNCTION clinic.encrypt_data(TEXT)          TO clinic_admin, clinic_doctor, clinic_nurse;
 GRANT EXECUTE ON FUNCTION clinic.decrypt_data(BYTEA)         TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student;
-GRANT EXECUTE ON FUNCTION clinic.create_consultation         TO clinic_admin, clinic_nurse;
-GRANT EXECUTE ON FUNCTION clinic.create_prescription         TO clinic_admin, clinic_doctor;
+GRANT EXECUTE ON FUNCTION clinic.create_consultation(INT, INT, TEXT, TEXT, TEXT, VARCHAR, DECIMAL, INT, DECIMAL) TO clinic_admin, clinic_nurse;
+GRANT EXECUTE ON FUNCTION clinic.create_prescription(INT, INT, TEXT, TEXT) TO clinic_admin, clinic_doctor;
 
 -- RLS helper functions — all roles need these
 GRANT EXECUTE ON FUNCTION clinic.current_app_user_id()  TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student, clinic_faculty;

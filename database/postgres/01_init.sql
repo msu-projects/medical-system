@@ -11,17 +11,40 @@
 -- --------------------------------------------------------
 -- Connect to the default 'postgres' database first, then create our DB.
 -- If running via psql, you may need to run this outside a transaction block.
+--
+-- Safety:
+--   - Existing databases are NOT dropped unless you pass:
+--       -v recreate_database=1
 
-SELECT pg_terminate_backend(pid)
-FROM pg_stat_activity
-WHERE datname = 'school_clinic_db' AND pid <> pg_backend_pid();
+SELECT EXISTS(
+        SELECT 1
+        FROM pg_database
+        WHERE datname = 'school_clinic_db'
+) AS db_exists
+\gset
 
-DROP DATABASE IF EXISTS school_clinic_db;
-CREATE DATABASE school_clinic_db
-    WITH ENCODING = 'UTF8'
-         LC_COLLATE = 'en_US.UTF-8'
-         LC_CTYPE = 'en_US.UTF-8'
-         TEMPLATE = template0;
+\if :db_exists
+    \if :{?recreate_database}
+        SELECT pg_terminate_backend(pid)
+        FROM pg_stat_activity
+        WHERE datname = 'school_clinic_db' AND pid <> pg_backend_pid();
+
+        DROP DATABASE school_clinic_db;
+        CREATE DATABASE school_clinic_db
+                WITH ENCODING = 'UTF8'
+                         LC_COLLATE = 'en_US.UTF-8'
+                         LC_CTYPE = 'en_US.UTF-8'
+                         TEMPLATE = template0;
+    \else
+        \echo 'INFO: school_clinic_db already exists; skipping create/drop. Pass -v recreate_database=1 to recreate.'
+    \endif
+\else
+    CREATE DATABASE school_clinic_db
+            WITH ENCODING = 'UTF8'
+                     LC_COLLATE = 'en_US.UTF-8'
+                     LC_CTYPE = 'en_US.UTF-8'
+                     TEMPLATE = template0;
+\endif
 
 -- --------------------------------------------------------
 -- 2. Connect to the new database

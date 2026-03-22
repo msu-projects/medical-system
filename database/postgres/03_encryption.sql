@@ -42,13 +42,13 @@ BEGIN
         RETURN NULL;
     END IF;
 
-    RETURN pgp_sym_encrypt(
+    RETURN public.pgp_sym_encrypt(
         plain_text,
         enc_key,
         'cipher-algo=aes256, compress-algo=0'
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION clinic.encrypt_data(TEXT) IS
     'Encrypts text using AES-256 PGP symmetric encryption. Reads key from app.encryption_key session variable.';
@@ -78,7 +78,7 @@ BEGIN
     END IF;
 
     BEGIN
-        decrypted := pgp_sym_decrypt(cipher_data, enc_key);
+        decrypted := public.pgp_sym_decrypt(cipher_data, enc_key);
         RETURN decrypted;
     EXCEPTION
         WHEN external_routine_invocation_exception THEN
@@ -87,7 +87,7 @@ BEGIN
             RETURN '[DECRYPTION FAILED]';
     END;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION clinic.decrypt_data(BYTEA) IS
     'Decrypts AES-256 PGP encrypted data. Reads key from app.encryption_key session variable. Returns [DECRYPTION FAILED] on key mismatch.';
@@ -143,7 +143,7 @@ BEGIN
 
     RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION clinic.create_consultation IS
     'Creates a consultation with auto-encrypted diagnosis and treatment notes.';
@@ -175,7 +175,7 @@ BEGIN
 
     RETURN new_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION clinic.create_prescription IS
     'Creates a prescription with auto-encrypted details and notes.';

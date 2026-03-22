@@ -117,7 +117,7 @@ BEGIN
     UNION ALL SELECT 'audit.activity_log',        COUNT(*) FROM audit.activity_log
     ORDER BY 1;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 GRANT EXECUTE ON FUNCTION clinic.fn_backup_verify() TO clinic_admin;
 

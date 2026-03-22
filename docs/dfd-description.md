@@ -78,7 +78,7 @@ Before drawing anything, map your system to the four basic DFD symbols:
 | ID  | Name                   | Key Data Elements                                                                                                                                             |
 | --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | D1  | Users                  | user_id, username, password_hash, email, full_name, role, is_active                                                                                           |
-| D2  | Students               | student_id, user_id, student_number, first_name, last_name, date_of_birth, sex, contact_number, emergency_contact, year_level, section, blood_type, allergies |
+| D2  | Students               | student_id, user_id, student_number, date_of_birth, sex, contact_number, emergency_contact, year_level, section, blood_type, allergies |
 | D3  | QR Codes               | qr_id, student_id, qr_token (UUID), is_active                                                                                                                 |
 | D4  | Consultations          | consultation_id, student_id, attended_by, check_in_time, chief_complaint, diagnosis (encrypted), treatment_notes (encrypted), vitals, status                  |
 | D5  | Prescriptions          | prescription_id, consultation_id, prescribed_by, prescription_details (encrypted), notes (encrypted)                                                          |

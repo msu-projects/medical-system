@@ -30,39 +30,39 @@ SELECT set_config('app.current_user_id', '1', false);
 -- Passwords are bcrypt-hashed. In this seed: all passwords are 'password123'
 -- Hash generated with: SELECT crypt('password123', gen_salt('bf'));
 
-INSERT INTO clinic.users (username, password_hash, email, full_name, role) VALUES
+INSERT INTO clinic.users (username, password_hash, email, first_name, last_name, role) VALUES
     -- Admins
-    ('admin',        crypt('password123', gen_salt('bf')), 'admin@school.edu',        'System Administrator',  'admin'),
+    ('admin',        crypt('password123', gen_salt('bf')), 'admin@school.edu',        'System',      'Administrator', 'admin'),
 
     -- Doctors
-    ('dr.santos',    crypt('password123', gen_salt('bf')), 'santos@school.edu',       'Dr. Maria Santos',      'doctor'),
-    ('dr.reyes',     crypt('password123', gen_salt('bf')), 'reyes@school.edu',        'Dr. Jose Reyes',        'doctor'),
+    ('dr.santos',    crypt('password123', gen_salt('bf')), 'santos@school.edu',       'Maria',       'Santos',        'doctor'),
+    ('dr.reyes',     crypt('password123', gen_salt('bf')), 'reyes@school.edu',        'Jose',        'Reyes',         'doctor'),
 
     -- Nurses
-    ('nurse.garcia', crypt('password123', gen_salt('bf')), 'garcia@school.edu',       'Nurse Ana Garcia',      'nurse'),
-    ('nurse.cruz',   crypt('password123', gen_salt('bf')), 'cruz@school.edu',         'Nurse Pedro Cruz',      'nurse'),
+    ('nurse.garcia', crypt('password123', gen_salt('bf')), 'garcia@school.edu',       'Ana',         'Garcia',        'nurse'),
+    ('nurse.cruz',   crypt('password123', gen_salt('bf')), 'cruz@school.edu',         'Pedro',       'Cruz',          'nurse'),
 
     -- Students (user_id 6-10)
-    ('juan.delacruz',  crypt('password123', gen_salt('bf')), 'juan@student.school.edu',   'Juan Dela Cruz',      'student'),
-    ('maria.clara',    crypt('password123', gen_salt('bf')), 'maria@student.school.edu',  'Maria Clara Reyes',   'student'),
-    ('andres.boni',    crypt('password123', gen_salt('bf')), 'andres@student.school.edu', 'Andres Bonifacio',    'student'),
-    ('gabby.silang',   crypt('password123', gen_salt('bf')), 'gabby@student.school.edu',  'Gabriela Silang',     'student'),
-    ('jose.rizal',     crypt('password123', gen_salt('bf')), 'jose@student.school.edu',   'Jose Rizal',          'student'),
+    ('juan.delacruz',  crypt('password123', gen_salt('bf')), 'juan@student.school.edu',   'Juan',        'Dela Cruz',     'student'),
+    ('maria.clara',    crypt('password123', gen_salt('bf')), 'maria@student.school.edu',  'Maria Clara', 'Reyes',         'student'),
+    ('andres.boni',    crypt('password123', gen_salt('bf')), 'andres@student.school.edu', 'Andres',      'Bonifacio',     'student'),
+    ('gabby.silang',   crypt('password123', gen_salt('bf')), 'gabby@student.school.edu',  'Gabriela',    'Silang',        'student'),
+    ('jose.rizal',     crypt('password123', gen_salt('bf')), 'jose@student.school.edu',   'Jose',        'Rizal',         'student'),
 
     -- Faculty (user_id 11-12)
-    ('prof.luna',    crypt('password123', gen_salt('bf')), 'luna@school.edu',         'Prof. Antonio Luna',    'faculty'),
-    ('prof.mabini',  crypt('password123', gen_salt('bf')), 'mabini@school.edu',       'Prof. Apolinario Mabini', 'faculty');
+    ('prof.luna',    crypt('password123', gen_salt('bf')), 'luna@school.edu',         'Antonio',     'Luna',          'faculty'),
+    ('prof.mabini',  crypt('password123', gen_salt('bf')), 'mabini@school.edu',       'Apolinario',  'Mabini',        'faculty');
 
 -- ============================================================================
 -- 2. STUDENTS — Extended Profiles
 -- ============================================================================
 
-INSERT INTO clinic.students (user_id, student_number, first_name, last_name, date_of_birth, sex, contact_number, emergency_contact_name, emergency_contact_number, year_level, section, blood_type, allergies) VALUES
-    (6,  '2024-0001', 'Juan',      'Dela Cruz',  '2006-03-15', 'Male',   '09171234567', 'Maria Dela Cruz',    '09181234567', 'Grade 11', 'STEM-A',    'O+',  NULL),
-    (7,  '2024-0002', 'Maria',     'Clara Reyes','2006-07-22', 'Female', '09172345678', 'Pedro Reyes',        '09182345678', 'Grade 11', 'STEM-A',    'A+',  'Penicillin'),
-    (8,  '2024-0003', 'Andres',    'Bonifacio',  '2005-11-30', 'Male',   '09173456789', 'Catalina Bonifacio', '09183456789', 'Grade 12', 'HUMSS-B',   'B+',  NULL),
-    (9,  '2024-0004', 'Gabriela',  'Silang',     '2006-01-10', 'Female', '09174567890', 'Diego Silang',       '09184567890', 'Grade 11', 'ABM-A',     'AB+', 'Sulfa drugs, Ibuprofen'),
-    (10, '2024-0005', 'Jose',      'Rizal',      '2005-06-19', 'Male',   '09175678901', 'Teodora Alonso',     '09185678901', 'Grade 12', 'STEM-B',    'O-',  NULL);
+INSERT INTO clinic.students (user_id, year_of_enrollment, date_of_birth, sex, contact_number, emergency_contact_name, emergency_contact_number, year_level, section, blood_type, allergies) VALUES
+    (6,  2024, '2006-03-15', 'Male',   '09171234567', 'Maria Dela Cruz',    '09181234567', 'Grade 11', 'STEM-A',    'O+',  NULL),
+    (7,  2024, '2006-07-22', 'Female', '09172345678', 'Pedro Reyes',        '09182345678', 'Grade 11', 'STEM-A',    'A+',  'Penicillin'),
+    (8,  2024, '2005-11-30', 'Male',   '09173456789', 'Catalina Bonifacio', '09183456789', 'Grade 12', 'HUMSS-B',   'B+',  NULL),
+    (9,  2024, '2006-01-10', 'Female', '09174567890', 'Diego Silang',       '09184567890', 'Grade 11', 'ABM-A',     'AB+', 'Sulfa drugs, Ibuprofen'),
+    (10, 2024, '2005-06-19', 'Male',   '09175678901', 'Teodora Alonso',     '09185678901', 'Grade 12', 'STEM-B',    'O-',  NULL);
 
 -- ============================================================================
 -- 3. QR CODES — One per Student
