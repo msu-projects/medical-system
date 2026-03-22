@@ -68,7 +68,8 @@ BEGIN
         'school_clinic', 'users', 'INSERT',
         JSON_OBJECT(
             'user_id', NEW.user_id, 'username', NEW.username,
-            'email', NEW.email, 'full_name', NEW.full_name,
+            'email', NEW.email,
+            'first_name', NEW.first_name, 'last_name', NEW.last_name,
             'role', NEW.role, 'is_active', NEW.is_active
         ),
         @app_current_user_id, CURRENT_USER()
@@ -85,12 +86,14 @@ BEGIN
         'school_clinic', 'users', 'UPDATE',
         JSON_OBJECT(
             'user_id', OLD.user_id, 'username', OLD.username,
-            'email', OLD.email, 'full_name', OLD.full_name,
+            'email', OLD.email,
+            'first_name', OLD.first_name, 'last_name', OLD.last_name,
             'role', OLD.role, 'is_active', OLD.is_active
         ),
         JSON_OBJECT(
             'user_id', NEW.user_id, 'username', NEW.username,
-            'email', NEW.email, 'full_name', NEW.full_name,
+            'email', NEW.email,
+            'first_name', NEW.first_name, 'last_name', NEW.last_name,
             'role', NEW.role, 'is_active', NEW.is_active
         ),
         @app_current_user_id, CURRENT_USER()
@@ -107,7 +110,8 @@ BEGIN
         'school_clinic', 'users', 'DELETE',
         JSON_OBJECT(
             'user_id', OLD.user_id, 'username', OLD.username,
-            'email', OLD.email, 'full_name', OLD.full_name,
+            'email', OLD.email,
+            'first_name', OLD.first_name, 'last_name', OLD.last_name,
             'role', OLD.role, 'is_active', OLD.is_active
         ),
         @app_current_user_id, CURRENT_USER()

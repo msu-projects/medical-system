@@ -43,13 +43,13 @@ SELECT
     c.vitals_temp,
     c.vitals_pulse,
     c.vitals_weight,
-    c.status                                AS consultation_status,
-    u_staff.full_name                       AS attended_by_name,
+    c.status                                                    AS consultation_status,
+    CONCAT(u_staff.first_name, ' ', u_staff.last_name)          AS attended_by_name,
     -- Prescription info (if any)
     p.prescription_id,
-    decrypt_data(p.prescription_details)    AS prescription_details,
-    p.issued_at                             AS prescription_date,
-    u_doc.full_name                         AS prescribed_by_name,
+    decrypt_data(p.prescription_details)                        AS prescription_details,
+    p.issued_at                                                 AS prescription_date,
+    CONCAT(u_doc.first_name, ' ', u_doc.last_name)              AS prescribed_by_name,
     -- Medicines dispensed (if any)
     m.name                                  AS medicine_name,
     cm.quantity_given,
@@ -82,19 +82,20 @@ SQL SECURITY DEFINER
 VIEW v_faculty_clearance AS
 SELECT
     hc.clearance_id,
-    CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+    CONCAT(u_student.first_name, ' ', u_student.last_name) AS student_name,
     s.student_number,
     s.year_level,
     s.section,
     hc.purpose,
-    hc.status                               AS clearance_status,
+    hc.status                                              AS clearance_status,
     hc.valid_until,
     hc.remarks,
-    u_issued.full_name                      AS issued_by_name,
-    hc.created_at                           AS requested_at
+    CONCAT(u_issued.first_name, ' ', u_issued.last_name)   AS issued_by_name,
+    hc.created_at                                          AS requested_at
 FROM
     health_clearances hc
     JOIN students s ON hc.student_id = s.student_id
+    JOIN users u_student ON s.user_id = u_student.user_id
     LEFT JOIN users u_issued ON hc.issued_by = u_issued.user_id
 WHERE
     hc.requested_by = current_app_user_id()
@@ -115,24 +116,25 @@ SELECT
     c.consultation_id,
     c.check_in_time,
     s.student_number,
-    CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+    CONCAT(u_student.first_name, ' ', u_student.last_name) AS student_name,
     s.year_level,
     s.section,
     s.blood_type,
     s.allergies,
     c.chief_complaint,
-    decrypt_data(c.diagnosis)               AS diagnosis,
-    decrypt_data(c.treatment_notes)         AS treatment_notes,
+    decrypt_data(c.diagnosis)                              AS diagnosis,
+    decrypt_data(c.treatment_notes)                        AS treatment_notes,
     c.vitals_bp,
     c.vitals_temp,
     c.vitals_pulse,
     c.vitals_weight,
-    c.status                                AS consultation_status,
-    u_staff.full_name                       AS attended_by_name,
+    c.status                                               AS consultation_status,
+    CONCAT(u_staff.first_name, ' ', u_staff.last_name)     AS attended_by_name,
     c.updated_at
 FROM
     consultations c
     JOIN students s ON c.student_id = s.student_id
+    JOIN users u_student ON s.user_id = u_student.user_id
     JOIN users u_staff ON c.attended_by = u_staff.user_id
 ORDER BY
     CASE WHEN c.status = 'ongoing' THEN 0 ELSE 1 END,
@@ -151,30 +153,31 @@ SELECT
     c.consultation_id,
     c.check_in_time,
     s.student_number,
-    CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+    CONCAT(u_student.first_name, ' ', u_student.last_name)  AS student_name,
     s.date_of_birth,
     s.sex,
     s.blood_type,
     s.allergies,
     c.chief_complaint,
-    decrypt_data(c.diagnosis)               AS diagnosis,
-    decrypt_data(c.treatment_notes)         AS treatment_notes,
+    decrypt_data(c.diagnosis)                               AS diagnosis,
+    decrypt_data(c.treatment_notes)                         AS treatment_notes,
     c.vitals_bp,
     c.vitals_temp,
     c.vitals_pulse,
     c.vitals_weight,
-    c.status                                AS consultation_status,
-    u_staff.full_name                       AS attended_by_name,
+    c.status                                                AS consultation_status,
+    CONCAT(u_staff.first_name, ' ', u_staff.last_name)      AS attended_by_name,
     -- Prescription details
     p.prescription_id,
-    decrypt_data(p.prescription_details)    AS prescription_details,
-    decrypt_data(p.notes)                   AS prescription_notes,
-    p.issued_at                             AS prescription_date,
-    u_doc.full_name                         AS prescribed_by_name,
+    decrypt_data(p.prescription_details)                    AS prescription_details,
+    decrypt_data(p.notes)                                   AS prescription_notes,
+    p.issued_at                                             AS prescription_date,
+    CONCAT(u_doc.first_name, ' ', u_doc.last_name)          AS prescribed_by_name,
     c.updated_at
 FROM
     consultations c
     JOIN students s ON c.student_id = s.student_id
+    JOIN users u_student ON s.user_id = u_student.user_id
     JOIN users u_staff ON c.attended_by = u_staff.user_id
     LEFT JOIN prescriptions p ON c.consultation_id = p.consultation_id
     LEFT JOIN users u_doc ON p.prescribed_by = u_doc.user_id
@@ -195,7 +198,7 @@ SELECT
     u.username,
     -- password_hash deliberately EXCLUDED from view
     u.email,
-    u.full_name,
+    CONCAT(u.first_name, ' ', u.last_name) AS full_name,
     u.role,
     u.is_active,
     u.last_login,
@@ -207,7 +210,7 @@ FROM
     users u
     LEFT JOIN students s ON u.user_id = s.user_id
 ORDER BY
-    u.role, u.full_name;
+    u.role, CONCAT(u.first_name, ' ', u.last_name);
 
 -- ============================================================================
 -- 6. QR CHECK-IN VIEW: v_qr_checkin
@@ -222,7 +225,7 @@ SELECT
     q.qr_token,
     s.student_id,
     s.student_number,
-    CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+    CONCAT(u_student.first_name, ' ', u_student.last_name) AS student_name,
     s.date_of_birth,
     s.sex,
     s.blood_type,
@@ -231,10 +234,11 @@ SELECT
     s.emergency_contact_number,
     s.year_level,
     s.section,
-    q.is_active                             AS qr_active
+    q.is_active                                            AS qr_active
 FROM
     qr_codes q
     JOIN students s ON q.student_id = s.student_id
+    JOIN users u_student ON s.user_id = u_student.user_id
 WHERE
     q.is_active = TRUE;
 
