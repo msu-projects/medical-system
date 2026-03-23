@@ -132,7 +132,7 @@ BEGIN
         JSON_OBJECT(
             'student_id', NEW.student_id, 'user_id', NEW.user_id,
             'student_number', NEW.student_number,
-            'first_name', NEW.first_name, 'last_name', NEW.last_name,
+            'year_of_enrollment', NEW.year_of_enrollment,
             'year_level', NEW.year_level, 'section', NEW.section
         ),
         @app_current_user_id, CURRENT_USER()
@@ -150,13 +150,13 @@ BEGIN
         JSON_OBJECT(
             'student_id', OLD.student_id, 'user_id', OLD.user_id,
             'student_number', OLD.student_number,
-            'first_name', OLD.first_name, 'last_name', OLD.last_name,
+            'year_of_enrollment', OLD.year_of_enrollment,
             'year_level', OLD.year_level, 'section', OLD.section
         ),
         JSON_OBJECT(
             'student_id', NEW.student_id, 'user_id', NEW.user_id,
             'student_number', NEW.student_number,
-            'first_name', NEW.first_name, 'last_name', NEW.last_name,
+            'year_of_enrollment', NEW.year_of_enrollment,
             'year_level', NEW.year_level, 'section', NEW.section
         ),
         @app_current_user_id, CURRENT_USER()
@@ -174,7 +174,7 @@ BEGIN
         JSON_OBJECT(
             'student_id', OLD.student_id, 'user_id', OLD.user_id,
             'student_number', OLD.student_number,
-            'first_name', OLD.first_name, 'last_name', OLD.last_name
+            'year_of_enrollment', OLD.year_of_enrollment
         ),
         @app_current_user_id, CURRENT_USER()
     );
@@ -191,7 +191,7 @@ BEGIN
         (table_schema, table_name, operation, new_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'qr_codes', 'INSERT',
-        JSON_OBJECT('qr_id', NEW.qr_id, 'student_id', NEW.student_id, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
+        JSON_OBJECT('student_id', NEW.student_id, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
         @app_current_user_id, CURRENT_USER()
     );
 END //
@@ -204,8 +204,8 @@ BEGIN
         (table_schema, table_name, operation, old_data, new_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'qr_codes', 'UPDATE',
-        JSON_OBJECT('qr_id', OLD.qr_id, 'student_id', OLD.student_id, 'qr_token', OLD.qr_token, 'is_active', OLD.is_active),
-        JSON_OBJECT('qr_id', NEW.qr_id, 'student_id', NEW.student_id, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
+        JSON_OBJECT('student_id', OLD.student_id, 'qr_token', OLD.qr_token, 'is_active', OLD.is_active),
+        JSON_OBJECT('student_id', NEW.student_id, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
         @app_current_user_id, CURRENT_USER()
     );
 END //
@@ -218,7 +218,7 @@ BEGIN
         (table_schema, table_name, operation, old_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'qr_codes', 'DELETE',
-        JSON_OBJECT('qr_id', OLD.qr_id, 'student_id', OLD.student_id, 'qr_token', OLD.qr_token),
+        JSON_OBJECT('student_id', OLD.student_id, 'qr_token', OLD.qr_token),
         @app_current_user_id, CURRENT_USER()
     );
 END //

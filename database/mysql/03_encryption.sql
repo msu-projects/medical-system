@@ -42,7 +42,7 @@ DELIMITER //
 
 CREATE FUNCTION encrypt_data(plain_text TEXT)
 RETURNS BLOB
-DETERMINISTIC
+NOT DETERMINISTIC
 SQL SECURITY DEFINER
 COMMENT 'Encrypts text using AES-256-CBC. Reads key from @app_encryption_key session variable. IV is prepended to ciphertext.'
 BEGIN
@@ -76,7 +76,7 @@ END //
 
 CREATE FUNCTION decrypt_data(cipher_data BLOB)
 RETURNS TEXT
-DETERMINISTIC
+NOT DETERMINISTIC
 SQL SECURITY DEFINER
 COMMENT 'Decrypts AES-256-CBC encrypted data. Reads key from @app_encryption_key session variable. Expects IV prepended to ciphertext.'
 BEGIN

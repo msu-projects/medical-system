@@ -33,7 +33,7 @@ DELIMITER //
 
 CREATE FUNCTION current_app_user_id()
 RETURNS INT
-DETERMINISTIC
+NOT DETERMINISTIC
 NO SQL
 SQL SECURITY DEFINER
 COMMENT 'Returns the current application user_id from @app_current_user_id session variable.'
@@ -43,7 +43,7 @@ END //
 
 CREATE FUNCTION current_app_role()
 RETURNS VARCHAR(20)
-DETERMINISTIC
+NOT DETERMINISTIC
 NO SQL
 SQL SECURITY DEFINER
 COMMENT 'Returns the current application role from @app_current_role session variable.'
