@@ -107,7 +107,7 @@ CREATE TABLE clinic.consultations (
     diagnosis       BYTEA        NOT NULL,
     treatment_notes BYTEA,
     -- Vital signs (not encrypted — not considered highly sensitive)
-    vitals_bp       VARCHAR(10),
+    vitals_bp       VARCHAR(10) CHECK (vitals_bp ~ '^[0-9]{2,3}/[0-9]{2,3}$'),
     vitals_temp     DECIMAL(4,1),
     vitals_pulse    INT,
     vitals_weight   DECIMAL(5,1),
@@ -281,6 +281,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
+ALTER FUNCTION clinic.fn_assign_student_number() OWNER TO clinic_trigger_owner;
+GRANT SELECT, INSERT, UPDATE ON clinic.student_number_counters TO clinic_trigger_owner;
+
 CREATE OR REPLACE FUNCTION clinic.fn_enforce_user_role()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -314,6 +317,9 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, clinic;
+
+ALTER FUNCTION clinic.fn_enforce_user_role() OWNER TO clinic_trigger_owner;
+GRANT SELECT ON clinic.users TO clinic_trigger_owner;
 
 -- --------------------------------------------------------
 -- 10. Updated_at Trigger — Auto-update timestamps

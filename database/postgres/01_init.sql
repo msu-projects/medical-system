@@ -111,6 +111,21 @@ BEGIN
         DROP OWNED BY clinic_app;
     EXCEPTION WHEN undefined_object THEN NULL;
     END;
+    BEGIN
+        REASSIGN OWNED BY clinic_trigger_owner TO postgres;
+        DROP OWNED BY clinic_trigger_owner;
+    EXCEPTION WHEN undefined_object THEN NULL;
+    END;
+    BEGIN
+        REASSIGN OWNED BY clinic_rls_owner TO postgres;
+        DROP OWNED BY clinic_rls_owner;
+    EXCEPTION WHEN undefined_object THEN NULL;
+    END;
+    BEGIN
+        REASSIGN OWNED BY audit_writer_owner TO postgres;
+        DROP OWNED BY audit_writer_owner;
+    EXCEPTION WHEN undefined_object THEN NULL;
+    END;
 END $$;
 
 DROP ROLE IF EXISTS clinic_admin;
@@ -119,6 +134,9 @@ DROP ROLE IF EXISTS clinic_nurse;
 DROP ROLE IF EXISTS clinic_student;
 DROP ROLE IF EXISTS clinic_faculty;
 DROP ROLE IF EXISTS clinic_app;
+DROP ROLE IF EXISTS clinic_trigger_owner;
+DROP ROLE IF EXISTS clinic_rls_owner;
+DROP ROLE IF EXISTS audit_writer_owner;
 
 -- Group roles (NOLOGIN — these are inherited, not used directly)
 CREATE ROLE clinic_admin   NOLOGIN NOINHERIT;
@@ -127,11 +145,19 @@ CREATE ROLE clinic_nurse   NOLOGIN NOINHERIT;
 CREATE ROLE clinic_student NOLOGIN NOINHERIT;
 CREATE ROLE clinic_faculty NOLOGIN NOINHERIT;
 
+-- Dedicated owners for SECURITY DEFINER functions (least-privilege)
+CREATE ROLE clinic_trigger_owner NOLOGIN NOINHERIT NOBYPASSRLS;
+CREATE ROLE clinic_rls_owner     NOLOGIN NOINHERIT BYPASSRLS;
+CREATE ROLE audit_writer_owner   NOLOGIN NOINHERIT NOBYPASSRLS;
+
 COMMENT ON ROLE clinic_admin   IS 'System administrator — full access to all data and audit logs';
 COMMENT ON ROLE clinic_doctor  IS 'School doctor — diagnoses, prescriptions, medical certificates';
 COMMENT ON ROLE clinic_nurse   IS 'School nurse / clinic staff — consultations, dispensing, check-ins';
 COMMENT ON ROLE clinic_student IS 'Student — view own medical records via masked views';
 COMMENT ON ROLE clinic_faculty IS 'Teacher / faculty — view clearance status only';
+COMMENT ON ROLE clinic_trigger_owner IS 'Owner of clinic SECURITY DEFINER trigger helpers; minimal DML rights only';
+COMMENT ON ROLE clinic_rls_owner     IS 'Owner of RLS identity helper functions; BYPASSRLS for policy-safe lookups';
+COMMENT ON ROLE audit_writer_owner   IS 'Owner of audit SECURITY DEFINER trigger function; insert-only on audit log';
 
 -- --------------------------------------------------------
 -- 6. Create the application service account (LOGIN role)

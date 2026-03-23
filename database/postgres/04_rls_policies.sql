@@ -60,6 +60,9 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
+ALTER FUNCTION clinic.current_app_user_id() OWNER TO clinic_rls_owner;
+GRANT SELECT ON clinic.users TO clinic_rls_owner;
+
 COMMENT ON FUNCTION clinic.current_app_user_id() IS
     'Returns the current application user_id from session variable, or NULL if not set.';
 
@@ -88,6 +91,8 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
+ALTER FUNCTION clinic.current_app_role() OWNER TO clinic_rls_owner;
+
 -- Helper function: Get student_id for current user
 CREATE OR REPLACE FUNCTION clinic.current_student_id()
 RETURNS INT AS $$
@@ -100,6 +105,9 @@ BEGIN
     RETURN sid;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
+
+ALTER FUNCTION clinic.current_student_id() OWNER TO clinic_rls_owner;
+GRANT SELECT ON clinic.students TO clinic_rls_owner;
 
 -- ============================================================================
 -- ENABLE RLS ON ALL CLINICAL TABLES

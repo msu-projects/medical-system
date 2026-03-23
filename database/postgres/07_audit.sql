@@ -133,6 +133,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, audit, clinic;
 
+ALTER FUNCTION audit.fn_audit_trigger() OWNER TO audit_writer_owner;
+GRANT INSERT ON audit.activity_log TO audit_writer_owner;
+GRANT USAGE ON SEQUENCE audit.activity_log_log_id_seq TO audit_writer_owner;
+
 COMMENT ON FUNCTION audit.fn_audit_trigger() IS
     'Generic audit trigger — logs INSERT/UPDATE/DELETE with before/after state as JSONB. SECURITY DEFINER allows all roles to generate audit entries.';
 
@@ -205,17 +209,17 @@ GRANT USAGE ON SCHEMA audit TO clinic_admin;
 -- Admin: can only READ audit records (no UPDATE, no DELETE)
 GRANT SELECT ON audit.activity_log TO clinic_admin;
 
--- The trigger function is SECURITY DEFINER (runs as the function owner,
--- typically postgres), so it can INSERT into audit.activity_log regardless
+-- The trigger function is SECURITY DEFINER (runs as the dedicated
+-- audit_writer_owner role), so it can INSERT into audit.activity_log regardless
 -- of the calling role's permissions. This is intentional — we want every
 -- role's actions to be audited, but no role should be able to write
 -- arbitrary entries or tamper with existing records.
 
 -- Grant sequence usage for the trigger function's INSERTs
 GRANT USAGE ON SEQUENCE audit.activity_log_log_id_seq TO clinic_admin;
--- The SECURITY DEFINER function runs as owner (postgres), which has
--- implicit access to the sequence, so no additional grants needed for
--- other roles — the trigger handles everything.
+-- The SECURITY DEFINER function runs as audit_writer_owner, and its
+-- sequence usage is granted explicitly above. No additional grants are
+-- needed for application roles — the trigger handles inserts safely.
 
 -- ============================================================================
 -- 5. HELPER VIEWS FOR AUDIT QUERIES

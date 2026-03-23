@@ -95,7 +95,7 @@ CREATE TABLE consultations (
     diagnosis       BLOB         NOT NULL,
     treatment_notes BLOB         DEFAULT NULL,
     -- Vital signs (not encrypted — not considered highly sensitive)
-    vitals_bp       VARCHAR(10)  DEFAULT NULL,
+    vitals_bp       VARCHAR(10) CHECK (vitals_bp REGEXP '^[0-9]{2,3}/[0-9]{2,3}$')  DEFAULT NULL,
     vitals_temp     DECIMAL(4,1) DEFAULT NULL,
     vitals_pulse    INT          DEFAULT NULL,
     vitals_weight   DECIMAL(5,1) DEFAULT NULL,
