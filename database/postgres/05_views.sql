@@ -54,7 +54,7 @@ SELECT
     cm.dispensed_at
 FROM
     clinic.consultations c
-    JOIN clinic.students s ON c.student_id = s.student_id
+    JOIN clinic.students s ON c.student_number = s.student_number
     JOIN clinic.users u_staff ON c.attended_by = u_staff.user_id
     LEFT JOIN clinic.prescriptions p ON c.consultation_id = p.consultation_id
     LEFT JOIN clinic.users u_doc ON p.prescribed_by = u_doc.user_id
@@ -93,7 +93,7 @@ SELECT
     hc.created_at                        AS requested_at
 FROM
     clinic.health_clearances hc
-    JOIN clinic.students s ON hc.student_id = s.student_id
+    JOIN clinic.students s ON hc.student_number = s.student_number
     JOIN clinic.users u_student ON s.user_id = u_student.user_id
     LEFT JOIN clinic.users u_issued ON hc.issued_by = u_issued.user_id
 WHERE
@@ -135,7 +135,7 @@ SELECT
     c.updated_at
 FROM
     clinic.consultations c
-    JOIN clinic.students s ON c.student_id = s.student_id
+    JOIN clinic.students s ON c.student_number = s.student_number
     JOIN clinic.users u_student ON s.user_id = u_student.user_id
     JOIN clinic.users u_staff ON c.attended_by = u_staff.user_id
 ORDER BY
@@ -179,7 +179,7 @@ SELECT
     c.updated_at
 FROM
     clinic.consultations c
-    JOIN clinic.students s ON c.student_id = s.student_id
+    JOIN clinic.students s ON c.student_number = s.student_number
     JOIN clinic.users u_student ON s.user_id = u_student.user_id
     JOIN clinic.users u_staff ON c.attended_by = u_staff.user_id
     LEFT JOIN clinic.prescriptions p ON c.consultation_id = p.consultation_id
@@ -228,7 +228,6 @@ CREATE OR REPLACE VIEW clinic.v_qr_checkin
 WITH (security_invoker = true) AS
 SELECT
     q.qr_token,
-    s.student_id,
     s.student_number,
     concat_ws(' ', u_student.first_name, u_student.last_name) AS student_name,
     s.date_of_birth,
@@ -242,7 +241,7 @@ SELECT
     q.is_active                          AS qr_active
 FROM
     clinic.qr_codes q
-    JOIN clinic.students s ON q.student_id = s.student_id
+    JOIN clinic.students s ON q.student_number = s.student_number
     JOIN clinic.users u_student ON s.user_id = u_student.user_id
 WHERE
     q.is_active = TRUE;

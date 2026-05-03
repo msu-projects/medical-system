@@ -74,13 +74,13 @@ GRANT USAGE ON SEQUENCE clinic.health_clearances_clearance_id_seq TO clinic_facu
 -- Encryption/decryption helpers — needed by roles that read/write encrypted data
 GRANT EXECUTE ON FUNCTION clinic.encrypt_data(TEXT)          TO clinic_admin, clinic_doctor, clinic_nurse;
 GRANT EXECUTE ON FUNCTION clinic.decrypt_data(BYTEA)         TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student;
-GRANT EXECUTE ON FUNCTION clinic.create_consultation(INT, INT, TEXT, TEXT, TEXT, VARCHAR, DECIMAL, INT, DECIMAL) TO clinic_admin, clinic_nurse;
+GRANT EXECUTE ON FUNCTION clinic.create_consultation(VARCHAR(20), INT, TEXT, TEXT, TEXT, VARCHAR, DECIMAL, INT, DECIMAL) TO clinic_admin, clinic_nurse;
 GRANT EXECUTE ON FUNCTION clinic.create_prescription(INT, INT, TEXT, TEXT) TO clinic_admin, clinic_doctor;
 
 -- RLS helper functions — all roles need these
 GRANT EXECUTE ON FUNCTION clinic.current_app_user_id()  TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student, clinic_faculty;
 GRANT EXECUTE ON FUNCTION clinic.current_app_role()     TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student, clinic_faculty;
-GRANT EXECUTE ON FUNCTION clinic.current_student_id()   TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student;
+GRANT EXECUTE ON FUNCTION clinic.current_student_number()   TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student;
 
 -- ============================================================================
 -- STEP 5: TABLE-LEVEL GRANTS — clinic_admin

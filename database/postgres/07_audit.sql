@@ -256,10 +256,10 @@ SELECT
     app_user_id,
     db_user,
     CASE
-        WHEN operation = 'INSERT' THEN new_data->>'student_id'
-        WHEN operation = 'DELETE' THEN old_data->>'student_id'
-        ELSE COALESCE(new_data->>'student_id', old_data->>'student_id')
-    END AS affected_student_id,
+        WHEN operation = 'INSERT' THEN new_data->>'student_number'
+        WHEN operation = 'DELETE' THEN old_data->>'student_number'
+        ELSE COALESCE(new_data->>'student_number', old_data->>'student_number')
+    END AS affected_student_number,
     changed_fields,
     changed_at,
     client_ip

@@ -98,7 +98,7 @@ COMMENT ON FUNCTION clinic.decrypt_data(BYTEA) IS
 -- Wraps encryption so the caller doesn't need to remember the encrypt syntax.
 -- Usage:
 --   SELECT clinic.create_consultation(
---       p_student_id := 1,
+--       p_student_number := 2000-1000,
 --       p_attended_by := 2,
 --       p_chief_complaint := 'Headache and fever',
 --       p_diagnosis := 'Acute viral upper respiratory infection',
@@ -110,7 +110,7 @@ COMMENT ON FUNCTION clinic.decrypt_data(BYTEA) IS
 --   );
 
 CREATE OR REPLACE FUNCTION clinic.create_consultation(
-    p_student_id      INT,
+    p_student_number  VARCHAR(20),
     p_attended_by     INT,
     p_chief_complaint TEXT DEFAULT NULL,
     p_diagnosis       TEXT DEFAULT '',
@@ -125,11 +125,11 @@ DECLARE
     new_id INT;
 BEGIN
     INSERT INTO clinic.consultations (
-        student_id, attended_by, chief_complaint,
+        student_number, attended_by, chief_complaint,
         diagnosis, treatment_notes,
         vitals_bp, vitals_temp, vitals_pulse, vitals_weight
     ) VALUES (
-        p_student_id,
+        p_student_number,
         p_attended_by,
         p_chief_complaint,
         clinic.encrypt_data(p_diagnosis),
@@ -194,14 +194,14 @@ COMMENT ON FUNCTION clinic.create_prescription IS
 -- 2. To INSERT encrypted data, use the helper functions:
 --
 --      SELECT clinic.create_consultation(
---          p_student_id := 1,
+--          p_student_number := 2000-2000,
 --          p_attended_by := 2,
 --          p_diagnosis := 'Migraine',
 --          p_treatment_notes := 'Given ibuprofen 200mg'
 --      );
 --
 --    Or manually:
---      INSERT INTO clinic.consultations (student_id, attended_by, diagnosis)
+--      INSERT INTO clinic.consultations (student_number, attended_by, diagnosis)
 --      VALUES (1, 2, clinic.encrypt_data('Migraine'));
 --
 -- 3. To READ decrypted data:
@@ -210,7 +210,7 @@ COMMENT ON FUNCTION clinic.create_prescription IS
 --             clinic.decrypt_data(diagnosis) AS diagnosis,
 --             clinic.decrypt_data(treatment_notes) AS treatment_notes
 --      FROM clinic.consultations
---      WHERE student_id = 1;
+--      WHERE student_number = '2000-2000';
 --
 --    Or use the pre-built views (05_views.sql) which auto-decrypt.
 --

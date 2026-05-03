@@ -93,20 +93,20 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic
 
 ALTER FUNCTION clinic.current_app_role() OWNER TO clinic_rls_owner;
 
--- Helper function: Get student_id for current user
-CREATE OR REPLACE FUNCTION clinic.current_student_id()
-RETURNS INT AS $$
+-- Helper function: Get student_number for current user
+CREATE OR REPLACE FUNCTION clinic.current_student_number()
+RETURNS VARCHAR(20) AS $$
 DECLARE
     sid INT;
 BEGIN
-    SELECT student_id INTO sid
+    SELECT student_number INTO sid
     FROM clinic.students
     WHERE user_id = clinic.current_app_user_id();
     RETURN sid;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
-ALTER FUNCTION clinic.current_student_id() OWNER TO clinic_rls_owner;
+ALTER FUNCTION clinic.current_student_number() OWNER TO clinic_rls_owner;
 GRANT SELECT ON clinic.students TO clinic_rls_owner;
 
 -- ============================================================================
@@ -235,7 +235,7 @@ CREATE POLICY nurse_update_consultations ON clinic.consultations
 CREATE POLICY student_own_consultations ON clinic.consultations
     FOR SELECT
     TO clinic_student
-    USING (student_id = clinic.current_student_id());
+    USING (student_number = clinic.current_student_number());
 
 -- ============================================================================
 -- POLICIES: clinic.prescriptions
@@ -279,7 +279,7 @@ CREATE POLICY student_own_prescriptions ON clinic.prescriptions
         consultation_id IN (
             SELECT consultation_id
             FROM clinic.consultations
-            WHERE student_id = clinic.current_student_id()
+            WHERE student_number = clinic.current_student_number()
         )
     );
 
@@ -315,7 +315,7 @@ CREATE POLICY student_own_consult_meds ON clinic.consultation_medicines
         consultation_id IN (
             SELECT consultation_id
             FROM clinic.consultations
-            WHERE student_id = clinic.current_student_id()
+            WHERE student_number = clinic.current_student_number()
         )
     );
 
@@ -358,7 +358,7 @@ CREATE POLICY nurse_manage_clearances ON clinic.health_clearances
 CREATE POLICY student_own_clearances ON clinic.health_clearances
     FOR SELECT
     TO clinic_student
-    USING (student_id = clinic.current_student_id());
+    USING (student_number = clinic.current_student_number());
 
 -- Faculty: can see clearances they requested OR that are finalized
 CREATE POLICY faculty_view_clearances ON clinic.health_clearances
@@ -396,7 +396,7 @@ CREATE POLICY nurse_read_qr ON clinic.qr_codes
 CREATE POLICY student_own_qr ON clinic.qr_codes
     FOR SELECT
     TO clinic_student
-    USING (student_id = clinic.current_student_id());
+    USING (student_number = clinic.current_student_number());
 
 -- ============================================================================
 -- POLICIES: clinic.medicines
