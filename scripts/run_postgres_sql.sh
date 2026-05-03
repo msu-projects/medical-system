@@ -31,6 +31,10 @@ if [[ ! -d "${SQL_DIR}" ]]; then
     exit 1
 fi
 
+read -sp "Enter PostgreSQL password for ${DB_USER}: " PGPASSWORD
+echo
+export PGPASSWORD
+
 echo "========================================"
 echo " Running PostgreSQL SQL Files"
 echo " Database: ${DB_NAME}"
@@ -81,3 +85,5 @@ echo ""
 echo "========================================"
 echo " All SQL files executed successfully"
 echo "========================================"
+
+unset PGPASSWORD

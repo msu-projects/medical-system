@@ -32,6 +32,8 @@ if not exist "%SQL_DIR%" (
     exit /b 1
 )
 
+for /f "delims=" %%A in ('powershell -Command "[System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToCoTaskMemUnicode((Read-Host 'Enter PostgreSQL password for %DB_USER%' -AsSecureString)))"') do set "PGPASSWORD=%%A"
+
 echo ========================================
 echo  Running PostgreSQL SQL Files
 echo  Database: %DB_NAME%
@@ -77,5 +79,7 @@ echo.
 echo ========================================
 echo  All SQL files executed successfully
 echo ========================================
+
+set PGPASSWORD=
 
 exit /b 0
