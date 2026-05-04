@@ -10,9 +10,9 @@
 --   2. Auto-decryption  — decrypt BLOB columns using the session key
 --   3. Filtered rows    — show only authorized records per role
 --
--- Views use SQL SECURITY DEFINER so they execute with the creator's
--- privileges, allowing users with only view-level grants to query
--- the underlying tables they cannot access directly.
+-- MySQL lacks PostgreSQL's security_invoker + native RLS combination.
+-- These views therefore use SQL SECURITY DEFINER plus role/session filtering
+-- to preserve the same access intent.
 -- ============================================================================
 
 USE school_clinic;
@@ -56,7 +56,7 @@ SELECT
     cm.dispensed_at
 FROM
     consultations c
-    JOIN students s ON c.student_id = s.student_id
+    JOIN students s ON c.student_number = s.student_number
     JOIN users u_staff ON c.attended_by = u_staff.user_id
     LEFT JOIN prescriptions p ON c.consultation_id = p.consultation_id
     LEFT JOIN users u_doc ON p.prescribed_by = u_doc.user_id
@@ -94,7 +94,7 @@ SELECT
     hc.created_at                                          AS requested_at
 FROM
     health_clearances hc
-    JOIN students s ON hc.student_id = s.student_id
+    JOIN students s ON hc.student_number = s.student_number
     JOIN users u_student ON s.user_id = u_student.user_id
     LEFT JOIN users u_issued ON hc.issued_by = u_issued.user_id
 WHERE
@@ -133,7 +133,7 @@ SELECT
     c.updated_at
 FROM
     consultations c
-    JOIN students s ON c.student_id = s.student_id
+    JOIN students s ON c.student_number = s.student_number
     JOIN users u_student ON s.user_id = u_student.user_id
     JOIN users u_staff ON c.attended_by = u_staff.user_id
 ORDER BY
@@ -176,7 +176,7 @@ SELECT
     c.updated_at
 FROM
     consultations c
-    JOIN students s ON c.student_id = s.student_id
+    JOIN students s ON c.student_number = s.student_number
     JOIN users u_student ON s.user_id = u_student.user_id
     JOIN users u_staff ON c.attended_by = u_staff.user_id
     LEFT JOIN prescriptions p ON c.consultation_id = p.consultation_id
@@ -223,7 +223,6 @@ SQL SECURITY DEFINER
 VIEW v_qr_checkin AS
 SELECT
     q.qr_token,
-    s.student_id,
     s.student_number,
     CONCAT(u_student.first_name, ' ', u_student.last_name) AS student_name,
     s.date_of_birth,
@@ -237,7 +236,7 @@ SELECT
     q.is_active                                            AS qr_active
 FROM
     qr_codes q
-    JOIN students s ON q.student_id = s.student_id
+    JOIN students s ON q.student_number = s.student_number
     JOIN users u_student ON s.user_id = u_student.user_id
 WHERE
     q.is_active = TRUE;

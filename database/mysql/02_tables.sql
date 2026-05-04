@@ -18,17 +18,16 @@ CREATE TABLE users (
     user_id       INT          AUTO_INCREMENT PRIMARY KEY,
     username      VARCHAR(50)  NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    email         VARCHAR(100) DEFAULT NULL,
+    email         VARCHAR(100),
     first_name    VARCHAR(100) NOT NULL,
     last_name     VARCHAR(100) NOT NULL,
-    role          ENUM('admin', 'nurse', 'doctor', 'student', 'faculty') NOT NULL,
+    role          VARCHAR(20)  NOT NULL
+                              CHECK (role IN ('admin', 'nurse', 'doctor', 'student', 'faculty')),
     is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
     last_login    TIMESTAMP    NULL DEFAULT NULL,
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_users_role      (role),
-    INDEX idx_users_username  (username),
-    INDEX idx_users_last_name (last_name),
     INDEX idx_users_is_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -39,11 +38,10 @@ CREATE TABLE users (
 -- Contains demographic and medical baseline data.
 
 CREATE TABLE students (
-    student_id               INT      AUTO_INCREMENT PRIMARY KEY,
-    user_id                  INT      NOT NULL UNIQUE,
+    student_number           VARCHAR(10) PRIMARY KEY,
+    user_id                  INT         NOT NULL UNIQUE,
     year_of_enrollment       SMALLINT NOT NULL
                                CHECK (year_of_enrollment BETWEEN 2000 AND 9999),
-    student_number           VARCHAR(20) UNIQUE,
     date_of_birth            DATE         DEFAULT NULL,
     sex                      ENUM('Male', 'Female', 'Other') DEFAULT NULL,
     contact_number           VARCHAR(20)  DEFAULT NULL,
@@ -56,8 +54,7 @@ CREATE TABLE students (
     created_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT chk_students_student_number_format
-        CHECK (student_number IS NULL OR student_number REGEXP '^[0-9]{4}-[0-9]{4,}$'),
-    INDEX idx_students_student_number (student_number),
+        CHECK (student_number REGEXP '^[0-9]{4}-[0-9]{4,}$'),
     INDEX idx_students_year_section   (year_level, section),
     CONSTRAINT fk_students_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -66,16 +63,15 @@ CREATE TABLE students (
 -- 3. QR Codes — Unique Scannable Tokens per Student
 -- --------------------------------------------------------
 -- Each student gets a UUID-based QR token for fast clinic check-in.
--- The QR code image encodes this UUID — never the student_id.
+-- The QR code image encodes this UUID — never the student_number.
 
--- student_id IS the primary key — one QR code per student (shared PK / 1:1 pattern)
 CREATE TABLE qr_codes (
-    student_id   INT       NOT NULL PRIMARY KEY,
-    qr_token     CHAR(36)  NOT NULL UNIQUE DEFAULT (UUID()),
+    qr_token       CHAR(36)  NOT NULL PRIMARY KEY DEFAULT (UUID()),
+    student_number VARCHAR(10) NOT NULL,
     is_active    BOOLEAN   NOT NULL DEFAULT TRUE,
     generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_qr_codes_token (qr_token),
-    CONSTRAINT fk_qr_student FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
+    CONSTRAINT fk_qr_student FOREIGN KEY (student_number) REFERENCES students(student_number) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -87,7 +83,7 @@ CREATE TABLE qr_codes (
 
 CREATE TABLE consultations (
     consultation_id INT          AUTO_INCREMENT PRIMARY KEY,
-    student_id      INT          NOT NULL,
+    student_number  VARCHAR(10)  NOT NULL,
     attended_by     INT          NOT NULL,
     check_in_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     chief_complaint TEXT         DEFAULT NULL,
@@ -102,11 +98,11 @@ CREATE TABLE consultations (
     status          ENUM('ongoing', 'completed', 'referred') NOT NULL DEFAULT 'ongoing',
     created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_consultations_student  (student_id),
+    INDEX idx_consultations_student  (student_number),
     INDEX idx_consultations_attended (attended_by),
     INDEX idx_consultations_date     (check_in_time),
     INDEX idx_consultations_status   (status),
-    CONSTRAINT fk_consult_student  FOREIGN KEY (student_id)  REFERENCES students(student_id)  ON DELETE RESTRICT,
+    CONSTRAINT fk_consult_student  FOREIGN KEY (student_number) REFERENCES students(student_number) ON DELETE RESTRICT,
     CONSTRAINT fk_consult_attendee FOREIGN KEY (attended_by) REFERENCES users(user_id)        ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -139,7 +135,7 @@ CREATE TABLE medicines (
     name         VARCHAR(100) NOT NULL,
     description  TEXT         DEFAULT NULL,
     unit         VARCHAR(20)  NOT NULL DEFAULT 'tablet',
-    is_available BOOLEAN      NOT NULL DEFAULT TRUE,
+    available_quantity INT    NOT NULL DEFAULT 0,
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_medicines_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -170,7 +166,7 @@ CREATE TABLE consultation_medicines (
 
 CREATE TABLE health_clearances (
     clearance_id INT          AUTO_INCREMENT PRIMARY KEY,
-    student_id   INT          NOT NULL,
+    student_number VARCHAR(10) NOT NULL,
     issued_by    INT          DEFAULT NULL,
     purpose      VARCHAR(100) DEFAULT NULL,
     remarks      TEXT         DEFAULT NULL,
@@ -179,9 +175,9 @@ CREATE TABLE health_clearances (
     requested_by INT          DEFAULT NULL,
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_clearances_student (student_id),
+    INDEX idx_clearances_student (student_number),
     INDEX idx_clearances_status  (status),
-    CONSTRAINT fk_clearance_student   FOREIGN KEY (student_id)   REFERENCES students(student_id) ON DELETE CASCADE,
+    CONSTRAINT fk_clearance_student   FOREIGN KEY (student_number) REFERENCES students(student_number) ON DELETE CASCADE,
     CONSTRAINT fk_clearance_issuer    FOREIGN KEY (issued_by)    REFERENCES users(user_id)       ON DELETE SET NULL,
     CONSTRAINT fk_clearance_requester FOREIGN KEY (requested_by) REFERENCES users(user_id)       ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -198,10 +194,11 @@ CREATE TABLE health_clearances (
 -- Used by trg_students_before_insert to auto-assign YYYY-NNNN numbers.
 
 CREATE TABLE student_number_counters (
-    enrollment_year SMALLINT NOT NULL PRIMARY KEY
-        CHECK (enrollment_year BETWEEN 2000 AND 9999),
-    last_value      INT      NOT NULL DEFAULT 0
-        CHECK (last_value >= 0)
+    enrollment_year SMALLINT NOT NULL,
+    `last_value`    INT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (enrollment_year),
+    CONSTRAINT chk_student_number_counter_year CHECK (enrollment_year BETWEEN 2000 AND 9999),
+    CONSTRAINT chk_student_number_counter_last CHECK (`last_value` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -235,11 +232,11 @@ BEGIN
     -- Auto-assign or validate student_number
     IF NEW.student_number IS NULL OR NEW.student_number = '' THEN
         -- Atomically increment counter and retrieve new value
-        INSERT INTO student_number_counters (enrollment_year, last_value)
+        INSERT INTO student_number_counters (enrollment_year, `last_value`)
         VALUES (NEW.year_of_enrollment, 1)
-        ON DUPLICATE KEY UPDATE last_value = last_value + 1;
+        ON DUPLICATE KEY UPDATE `last_value` = `last_value` + 1;
 
-        SELECT last_value INTO v_next
+        SELECT `last_value` INTO v_next
         FROM student_number_counters
         WHERE enrollment_year = NEW.year_of_enrollment;
 
@@ -261,9 +258,9 @@ BEGIN
         END IF;
 
         -- Update counter if supplied suffix exceeds current last value
-        INSERT INTO student_number_counters (enrollment_year, last_value)
+        INSERT INTO student_number_counters (enrollment_year, `last_value`)
         VALUES (NEW.year_of_enrollment, v_suffix)
-        ON DUPLICATE KEY UPDATE last_value = GREATEST(last_value, v_suffix);
+        ON DUPLICATE KEY UPDATE `last_value` = GREATEST(`last_value`, v_suffix);
     END IF;
 END //
 
@@ -433,6 +430,6 @@ DELIMITER ;
 -- SHOW TABLES;
 -- DESCRIBE users;       -- first_name, last_name (no full_name)
 -- DESCRIBE students;    -- year_of_enrollment, no first_name/last_name
--- DESCRIBE qr_codes;    -- student_id is the PRIMARY KEY (no qr_id)
+-- DESCRIBE qr_codes;    -- qr_token is the PRIMARY KEY
 -- SHOW TRIGGERS;
 -- ============================================================================

@@ -130,8 +130,7 @@ BEGIN
     VALUES (
         'school_clinic', 'students', 'INSERT',
         JSON_OBJECT(
-            'student_id', NEW.student_id, 'user_id', NEW.user_id,
-            'student_number', NEW.student_number,
+            'student_number', NEW.student_number, 'user_id', NEW.user_id,
             'year_of_enrollment', NEW.year_of_enrollment,
             'year_level', NEW.year_level, 'section', NEW.section
         ),
@@ -148,14 +147,12 @@ BEGIN
     VALUES (
         'school_clinic', 'students', 'UPDATE',
         JSON_OBJECT(
-            'student_id', OLD.student_id, 'user_id', OLD.user_id,
-            'student_number', OLD.student_number,
+            'student_number', OLD.student_number, 'user_id', OLD.user_id,
             'year_of_enrollment', OLD.year_of_enrollment,
             'year_level', OLD.year_level, 'section', OLD.section
         ),
         JSON_OBJECT(
-            'student_id', NEW.student_id, 'user_id', NEW.user_id,
-            'student_number', NEW.student_number,
+            'student_number', NEW.student_number, 'user_id', NEW.user_id,
             'year_of_enrollment', NEW.year_of_enrollment,
             'year_level', NEW.year_level, 'section', NEW.section
         ),
@@ -172,8 +169,7 @@ BEGIN
     VALUES (
         'school_clinic', 'students', 'DELETE',
         JSON_OBJECT(
-            'student_id', OLD.student_id, 'user_id', OLD.user_id,
-            'student_number', OLD.student_number,
+            'student_number', OLD.student_number, 'user_id', OLD.user_id,
             'year_of_enrollment', OLD.year_of_enrollment
         ),
         @app_current_user_id, CURRENT_USER()
@@ -191,7 +187,7 @@ BEGIN
         (table_schema, table_name, operation, new_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'qr_codes', 'INSERT',
-        JSON_OBJECT('student_id', NEW.student_id, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
+        JSON_OBJECT('student_number', NEW.student_number, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
         @app_current_user_id, CURRENT_USER()
     );
 END //
@@ -204,8 +200,8 @@ BEGIN
         (table_schema, table_name, operation, old_data, new_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'qr_codes', 'UPDATE',
-        JSON_OBJECT('student_id', OLD.student_id, 'qr_token', OLD.qr_token, 'is_active', OLD.is_active),
-        JSON_OBJECT('student_id', NEW.student_id, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
+        JSON_OBJECT('student_number', OLD.student_number, 'qr_token', OLD.qr_token, 'is_active', OLD.is_active),
+        JSON_OBJECT('student_number', NEW.student_number, 'qr_token', NEW.qr_token, 'is_active', NEW.is_active),
         @app_current_user_id, CURRENT_USER()
     );
 END //
@@ -218,7 +214,7 @@ BEGIN
         (table_schema, table_name, operation, old_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'qr_codes', 'DELETE',
-        JSON_OBJECT('student_id', OLD.student_id, 'qr_token', OLD.qr_token),
+        JSON_OBJECT('student_number', OLD.student_number, 'qr_token', OLD.qr_token),
         @app_current_user_id, CURRENT_USER()
     );
 END //
@@ -237,7 +233,7 @@ BEGIN
     VALUES (
         'school_clinic', 'consultations', 'INSERT',
         JSON_OBJECT(
-            'consultation_id', NEW.consultation_id, 'student_id', NEW.student_id,
+            'consultation_id', NEW.consultation_id, 'student_number', NEW.student_number,
             'attended_by', NEW.attended_by, 'chief_complaint', NEW.chief_complaint,
             'diagnosis', '[ENCRYPTED]', 'treatment_notes', '[ENCRYPTED]',
             'vitals_bp', NEW.vitals_bp, 'vitals_temp', NEW.vitals_temp,
@@ -256,13 +252,13 @@ BEGIN
     VALUES (
         'school_clinic', 'consultations', 'UPDATE',
         JSON_OBJECT(
-            'consultation_id', OLD.consultation_id, 'student_id', OLD.student_id,
+            'consultation_id', OLD.consultation_id, 'student_number', OLD.student_number,
             'attended_by', OLD.attended_by, 'chief_complaint', OLD.chief_complaint,
             'diagnosis', '[ENCRYPTED]', 'treatment_notes', '[ENCRYPTED]',
             'status', OLD.status
         ),
         JSON_OBJECT(
-            'consultation_id', NEW.consultation_id, 'student_id', NEW.student_id,
+            'consultation_id', NEW.consultation_id, 'student_number', NEW.student_number,
             'attended_by', NEW.attended_by, 'chief_complaint', NEW.chief_complaint,
             'diagnosis', '[ENCRYPTED]', 'treatment_notes', '[ENCRYPTED]',
             'status', NEW.status
@@ -280,7 +276,7 @@ BEGIN
     VALUES (
         'school_clinic', 'consultations', 'DELETE',
         JSON_OBJECT(
-            'consultation_id', OLD.consultation_id, 'student_id', OLD.student_id,
+            'consultation_id', OLD.consultation_id, 'student_number', OLD.student_number,
             'attended_by', OLD.attended_by, 'status', OLD.status
         ),
         @app_current_user_id, CURRENT_USER()
@@ -356,7 +352,7 @@ BEGIN
         (table_schema, table_name, operation, new_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'medicines', 'INSERT',
-        JSON_OBJECT('medicine_id', NEW.medicine_id, 'name', NEW.name, 'unit', NEW.unit, 'is_available', NEW.is_available),
+        JSON_OBJECT('medicine_id', NEW.medicine_id, 'name', NEW.name, 'unit', NEW.unit, 'available_quantity', NEW.available_quantity),
         @app_current_user_id, CURRENT_USER()
     );
 END //
@@ -369,8 +365,8 @@ BEGIN
         (table_schema, table_name, operation, old_data, new_data, app_user_id, db_user)
     VALUES (
         'school_clinic', 'medicines', 'UPDATE',
-        JSON_OBJECT('medicine_id', OLD.medicine_id, 'name', OLD.name, 'unit', OLD.unit, 'is_available', OLD.is_available),
-        JSON_OBJECT('medicine_id', NEW.medicine_id, 'name', NEW.name, 'unit', NEW.unit, 'is_available', NEW.is_available),
+        JSON_OBJECT('medicine_id', OLD.medicine_id, 'name', OLD.name, 'unit', OLD.unit, 'available_quantity', OLD.available_quantity),
+        JSON_OBJECT('medicine_id', NEW.medicine_id, 'name', NEW.name, 'unit', NEW.unit, 'available_quantity', NEW.available_quantity),
         @app_current_user_id, CURRENT_USER()
     );
 END //
@@ -443,7 +439,7 @@ BEGIN
     VALUES (
         'school_clinic', 'health_clearances', 'INSERT',
         JSON_OBJECT(
-            'clearance_id', NEW.clearance_id, 'student_id', NEW.student_id,
+            'clearance_id', NEW.clearance_id, 'student_number', NEW.student_number,
             'purpose', NEW.purpose, 'status', NEW.status,
             'issued_by', NEW.issued_by, 'requested_by', NEW.requested_by
         ),
@@ -460,12 +456,12 @@ BEGIN
     VALUES (
         'school_clinic', 'health_clearances', 'UPDATE',
         JSON_OBJECT(
-            'clearance_id', OLD.clearance_id, 'student_id', OLD.student_id,
+            'clearance_id', OLD.clearance_id, 'student_number', OLD.student_number,
             'purpose', OLD.purpose, 'status', OLD.status,
             'issued_by', OLD.issued_by, 'requested_by', OLD.requested_by
         ),
         JSON_OBJECT(
-            'clearance_id', NEW.clearance_id, 'student_id', NEW.student_id,
+            'clearance_id', NEW.clearance_id, 'student_number', NEW.student_number,
             'purpose', NEW.purpose, 'status', NEW.status,
             'issued_by', NEW.issued_by, 'requested_by', NEW.requested_by
         ),
@@ -482,7 +478,7 @@ BEGIN
     VALUES (
         'school_clinic', 'health_clearances', 'DELETE',
         JSON_OBJECT(
-            'clearance_id', OLD.clearance_id, 'student_id', OLD.student_id,
+            'clearance_id', OLD.clearance_id, 'student_number', OLD.student_number,
             'purpose', OLD.purpose, 'status', OLD.status
         ),
         @app_current_user_id, CURRENT_USER()
@@ -496,18 +492,27 @@ DELIMITER ;
 -- ============================================================================
 -- Only clinic_admin can read the audit log. No role can modify or delete records.
 
-REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_doctor'@'%';
-REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_nurse'@'%';
-REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_student'@'%';
-REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_faculty'@'%';
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS sp_safe_revoke_audit_access //
+CREATE PROCEDURE sp_safe_revoke_audit_access()
+BEGIN
+    -- Ignore "no such grant" errors so reruns remain idempotent.
+    DECLARE CONTINUE HANDLER FOR 1141 BEGIN END;
+
+    REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_doctor';
+    REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_nurse';
+    REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_student';
+    REVOKE ALL PRIVILEGES ON school_clinic_audit.* FROM 'clinic_faculty';
+END //
+
+CALL sp_safe_revoke_audit_access() //
+DROP PROCEDURE sp_safe_revoke_audit_access //
+
+DELIMITER ;
 
 -- Admin: read-only access to audit log
-GRANT SELECT ON school_clinic_audit.activity_log TO 'clinic_admin'@'%';
-
--- The clinic_app account needs INSERT on audit (triggers run as definer,
--- but if connecting as clinic_app, the trigger's DEFINER context handles it)
-GRANT INSERT ON school_clinic_audit.activity_log TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic_audit.activity_log TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic_audit.activity_log TO 'clinic_admin';
 
 FLUSH PRIVILEGES;
 
@@ -543,13 +548,13 @@ SELECT
     app_user_id,
     db_user,
     CASE
-        WHEN operation = 'INSERT' THEN JSON_UNQUOTE(JSON_EXTRACT(new_data, '$.student_id'))
-        WHEN operation = 'DELETE' THEN JSON_UNQUOTE(JSON_EXTRACT(old_data, '$.student_id'))
+        WHEN operation = 'INSERT' THEN JSON_UNQUOTE(JSON_EXTRACT(new_data, '$.student_number'))
+        WHEN operation = 'DELETE' THEN JSON_UNQUOTE(JSON_EXTRACT(old_data, '$.student_number'))
         ELSE COALESCE(
-            JSON_UNQUOTE(JSON_EXTRACT(new_data, '$.student_id')),
-            JSON_UNQUOTE(JSON_EXTRACT(old_data, '$.student_id'))
+            JSON_UNQUOTE(JSON_EXTRACT(new_data, '$.student_number')),
+            JSON_UNQUOTE(JSON_EXTRACT(old_data, '$.student_number'))
         )
-    END AS affected_student_id,
+    END AS affected_student_number,
     changed_fields,
     changed_at,
     client_ip
@@ -560,8 +565,8 @@ WHERE
 ORDER BY
     changed_at DESC;
 
-GRANT SELECT ON school_clinic_audit.v_recent_activity TO 'clinic_admin'@'%';
-GRANT SELECT ON school_clinic_audit.v_medical_record_access TO 'clinic_admin'@'%';
+GRANT SELECT ON school_clinic_audit.v_recent_activity TO 'clinic_admin';
+GRANT SELECT ON school_clinic_audit.v_medical_record_access TO 'clinic_admin';
 
 FLUSH PRIVILEGES;
 

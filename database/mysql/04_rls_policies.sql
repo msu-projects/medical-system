@@ -18,9 +18,10 @@
 --   SET @app_current_role = '<role_name>';
 --
 -- IMPORTANT: In MySQL, the security boundary is enforced by:
---   - Revoking direct SELECT on base tables from restricted roles
---   - Granting SELECT only on filtered views
---   - Using SQL SECURITY DEFINER on views/procedures
+--   - Session context variables set by the application per request
+--   - Filtered views and role-aware procedures
+--   - Least-privilege grants aligned with role intent
+--   - SQL SECURITY DEFINER for controlled helper execution
 -- ============================================================================
 
 USE school_clinic;
@@ -51,14 +52,14 @@ BEGIN
     RETURN @app_current_role;
 END //
 
-CREATE FUNCTION current_student_id()
-RETURNS INT
+CREATE FUNCTION current_student_number()
+RETURNS VARCHAR(10)
 READS SQL DATA
 SQL SECURITY DEFINER
-COMMENT 'Returns the student_id for the current session user, or NULL if not a student.'
+COMMENT 'Returns the student_number for the current session user, or NULL if not a student.'
 BEGIN
-    DECLARE sid INT DEFAULT NULL;
-    SELECT student_id INTO sid
+    DECLARE sid VARCHAR(10) DEFAULT NULL;
+    SELECT student_number INTO sid
     FROM students
     WHERE user_id = @app_current_user_id
     LIMIT 1;
@@ -72,7 +73,7 @@ END //
 
 -- Insert consultation (only nurses / admin can create; must be the attendee)
 CREATE PROCEDURE secure_create_consultation(
-    IN p_student_id      INT,
+    IN p_student_number  VARCHAR(10),
     IN p_chief_complaint TEXT,
     IN p_diagnosis       TEXT,
     IN p_treatment_notes TEXT,
@@ -101,11 +102,11 @@ BEGIN
     SET SESSION block_encryption_mode = 'aes-256-cbc';
 
     INSERT INTO consultations (
-        student_id, attended_by, chief_complaint,
+        student_number, attended_by, chief_complaint,
         diagnosis, treatment_notes,
         vitals_bp, vitals_temp, vitals_pulse, vitals_weight
     ) VALUES (
-        p_student_id,
+        p_student_number,
         @app_current_user_id,
         p_chief_complaint,
         encrypt_data(p_diagnosis),
@@ -186,7 +187,7 @@ END //
 
 -- Request a health clearance (faculty / admin)
 CREATE PROCEDURE secure_request_clearance(
-    IN p_student_id INT,
+    IN p_student_number VARCHAR(10),
     IN p_purpose    VARCHAR(100),
     OUT p_clearance_id INT
 )
@@ -201,8 +202,8 @@ BEGIN
             SET MESSAGE_TEXT = 'Access denied: only admin and faculty roles can request clearances.';
     END IF;
 
-    INSERT INTO health_clearances (student_id, purpose, requested_by)
-    VALUES (p_student_id, p_purpose, @app_current_user_id);
+    INSERT INTO health_clearances (student_number, purpose, requested_by)
+    VALUES (p_student_number, p_purpose, @app_current_user_id);
 
     SET p_clearance_id = LAST_INSERT_ID();
 END //
@@ -244,10 +245,10 @@ DELIMITER ;
 -- The MySQL approach enforces access control through:
 --   1. Views (05_views.sql) — each role gets filtered, column-masked views
 --   2. Procedures (above) — write operations validate role + ownership
---   3. Grants (06_grants.sql) — base table access revoked from restricted users
+--   3. Grants (06_grants.sql) — least-privilege role grants aligned to policy intent
 --
 -- The application API layer MUST:
 --   a) SET @app_current_user_id and @app_current_role on every connection
---   b) Use views for SELECT and procedures for INSERT/UPDATE
+--   b) Prefer views for SELECT and procedures for INSERT/UPDATE paths
 --   c) NEVER expose direct table access to end users
 -- ============================================================================

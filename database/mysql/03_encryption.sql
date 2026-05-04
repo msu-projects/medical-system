@@ -43,6 +43,7 @@ DELIMITER //
 CREATE FUNCTION encrypt_data(plain_text TEXT)
 RETURNS BLOB
 NOT DETERMINISTIC
+READS SQL DATA
 SQL SECURITY DEFINER
 COMMENT 'Encrypts text using AES-256-CBC. Reads key from @app_encryption_key session variable. IV is prepended to ciphertext.'
 BEGIN
@@ -77,6 +78,7 @@ END //
 CREATE FUNCTION decrypt_data(cipher_data BLOB)
 RETURNS TEXT
 NOT DETERMINISTIC
+READS SQL DATA
 SQL SECURITY DEFINER
 COMMENT 'Decrypts AES-256-CBC encrypted data. Reads key from @app_encryption_key session variable. Expects IV prepended to ciphertext.'
 BEGIN
@@ -115,7 +117,7 @@ END //
 -- Wraps encryption so the caller doesn't need to remember the encrypt syntax.
 
 CREATE PROCEDURE create_consultation(
-    IN p_student_id      INT,
+    IN p_student_number  VARCHAR(10),
     IN p_attended_by     INT,
     IN p_chief_complaint TEXT,
     IN p_diagnosis       TEXT,
@@ -132,11 +134,11 @@ BEGIN
     SET SESSION block_encryption_mode = 'aes-256-cbc';
 
     INSERT INTO consultations (
-        student_id, attended_by, chief_complaint,
+        student_number, attended_by, chief_complaint,
         diagnosis, treatment_notes,
         vitals_bp, vitals_temp, vitals_pulse, vitals_weight
     ) VALUES (
-        p_student_id,
+        p_student_number,
         p_attended_by,
         p_chief_complaint,
         encrypt_data(p_diagnosis),
@@ -205,8 +207,8 @@ DELIMITER ;
 --      SELECT @new_id;
 --
 --    Or manually:
---      INSERT INTO consultations (student_id, attended_by, diagnosis)
---      VALUES (1, 2, encrypt_data('Migraine'));
+--      INSERT INTO consultations (student_number, attended_by, diagnosis)
+--      VALUES ('2024-0001', 2, encrypt_data('Migraine'));
 --
 -- 3. To READ decrypted data:
 --
@@ -214,7 +216,7 @@ DELIMITER ;
 --             decrypt_data(diagnosis)       AS diagnosis,
 --             decrypt_data(treatment_notes) AS treatment_notes
 --      FROM consultations
---      WHERE student_id = 1;
+--      WHERE student_number = '2024-0001';
 --
 --    Or use the pre-built views (05_views.sql) which auto-decrypt.
 --

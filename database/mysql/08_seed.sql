@@ -71,24 +71,24 @@ INSERT INTO students (user_id, year_of_enrollment, date_of_birth, sex, contact_n
 -- 3. QR CODES — One per Student
 -- ============================================================================
 
-INSERT INTO qr_codes (student_id) VALUES
-    (1), (2), (3), (4), (5);
+INSERT INTO qr_codes (student_number) VALUES
+    ('2024-0001'), ('2024-0002'), ('2024-0003'), ('2024-0004'), ('2024-0005');
 
 -- ============================================================================
 -- 4. MEDICINES — Basic Catalog
 -- ============================================================================
 
-INSERT INTO medicines (name, description, unit) VALUES
-    ('Paracetamol 500mg',      'For fever and mild pain relief',         'tablet'),
-    ('Ibuprofen 200mg',        'Anti-inflammatory and pain relief',      'tablet'),
-    ('Mefenamic Acid 500mg',   'For moderate pain and dysmenorrhea',     'capsule'),
-    ('Cetirizine 10mg',        'Antihistamine for allergies',            'tablet'),
-    ('Loperamide 2mg',         'For acute diarrhea',                     'capsule'),
-    ('Oral Rehydration Salts', 'For dehydration',                        'sachet'),
-    ('Betadine Solution',      'Antiseptic for wounds',                  'ml'),
-    ('Band-Aid',               'Adhesive bandage for minor wounds',      'piece'),
-    ('Cotton Balls',           'For wound cleaning and dressing',        'piece'),
-    ('Amoxicillin 500mg',      'Antibiotic (requires prescription)',     'capsule');
+INSERT INTO medicines (name, description, unit, available_quantity) VALUES
+    ('Paracetamol 500mg',      'For fever and mild pain relief',         'tablet', 5),
+    ('Ibuprofen 200mg',        'Anti-inflammatory and pain relief',      'tablet', 5),
+    ('Mefenamic Acid 500mg',   'For moderate pain and dysmenorrhea',     'capsule', 5),
+    ('Cetirizine 10mg',        'Antihistamine for allergies',            'tablet', 5),
+    ('Loperamide 2mg',         'For acute diarrhea',                     'capsule', 5),
+    ('Oral Rehydration Salts', 'For dehydration',                        'sachet', 5),
+    ('Betadine Solution',      'Antiseptic for wounds',                  'ml', 5),
+    ('Band-Aid',               'Adhesive bandage for minor wounds',      'piece', 5),
+    ('Cotton Balls',           'For wound cleaning and dressing',        'piece', 5),
+    ('Amoxicillin 500mg',      'Antibiotic (requires prescription)',     'capsule', 5);
 
 -- ============================================================================
 -- 5. CONSULTATIONS — Encrypted Medical Records
@@ -98,7 +98,7 @@ INSERT INTO medicines (name, description, unit) VALUES
 -- Consultation 1: Juan — headache and fever (attended by Nurse Garcia)
 SET @app_current_user_id = 4;
 CALL create_consultation(
-    1, 4,
+    '2024-0001', 4,
     'Headache and fever since this morning',
     'Acute viral upper respiratory tract infection',
     'Temperature 38.5C on arrival. Given Paracetamol 500mg. Advised to rest in clinic for 30 minutes. Temperature down to 37.2C before discharge. Advised to drink plenty of fluids. Return if fever persists beyond 3 days.',
@@ -108,7 +108,7 @@ CALL create_consultation(
 
 -- Consultation 2: Maria Clara — allergic reaction (attended by Nurse Garcia)
 CALL create_consultation(
-    2, 4,
+    '2024-0002', 4,
     'Skin rashes and itching after eating seafood',
     'Allergic dermatitis — likely food allergen (seafood)',
     'Hives on forearms and neck. No respiratory distress. Given Cetirizine 10mg. Noted existing Penicillin allergy in records. Advised to avoid seafood. Rashes subsiding after 1 hour. Discharged with instructions.',
@@ -119,7 +119,7 @@ CALL create_consultation(
 -- Consultation 3: Andres — sports injury (attended by Nurse Cruz)
 SET @app_current_user_id = 5;
 CALL create_consultation(
-    3, 5,
+    '2024-0003', 5,
     'Twisted ankle during basketball practice',
     'Grade 1 ankle sprain — lateral ligament',
     'Swelling on right lateral ankle. RICE protocol applied. Cold compress for 15 minutes. Elastic bandage wrap. Referred to Dr. Santos for further evaluation. No weight bearing advised.',
@@ -133,7 +133,7 @@ UPDATE consultations SET status = 'referred' WHERE consultation_id = 3;
 -- Consultation 4: Gabriela — menstrual cramps (attended by Nurse Garcia)
 SET @app_current_user_id = 4;
 CALL create_consultation(
-    4, 4,
+    '2024-0004', 4,
     'Severe abdominal cramps since class started',
     'Dysmenorrhea (primary)',
     'Noted allergy to Ibuprofen — used Mefenamic Acid instead. Given Mefenamic Acid 500mg. Hot compress applied to abdomen. Rested in clinic for 45 minutes. Pain subsided from 8/10 to 3/10. Discharged.',
@@ -144,7 +144,7 @@ CALL create_consultation(
 -- Consultation 5: Jose — stomach ache (attended by Nurse Cruz)
 SET @app_current_user_id = 5;
 CALL create_consultation(
-    5, 5,
+    '2024-0005', 5,
     'Stomach pain and nausea after lunch',
     'Acute gastritis — likely dietary cause',
     'Epigastric tenderness on palpation. No vomiting. Given ORS. Monitored for 1 hour. Symptoms improving. Advised bland diet for 24 hours. Return if symptoms worsen.',
@@ -155,7 +155,7 @@ CALL create_consultation(
 -- Consultation 6: Juan again — follow-up (attended by Nurse Garcia)
 SET @app_current_user_id = 4;
 CALL create_consultation(
-    1, 4,
+    '2024-0001', 4,
     'Follow-up: fever resolved but still has mild cough',
     'Resolving URTI with residual cough',
     'Afebrile today. Mild productive cough. Lungs clear on auscultation. Advised to continue fluids. No medication given. Referred to Dr. Santos for prescription if cough persists.',
@@ -224,19 +224,19 @@ INSERT INTO consultation_medicines (consultation_id, medicine_id, quantity_given
 SET @app_current_user_id = 11; -- Prof. Luna
 
 -- Faculty requests clearance for field trip
-INSERT INTO health_clearances (student_id, purpose, requested_by) VALUES
-    (1, 'Field trip to Science Museum — March 2026',  11),
-    (2, 'Field trip to Science Museum — March 2026',  11),
-    (3, 'Field trip to Science Museum — March 2026',  11);
+INSERT INTO health_clearances (student_number, purpose, requested_by) VALUES
+    ('2024-0001', 'Field trip to Science Museum — March 2026',  11),
+    ('2024-0002', 'Field trip to Science Museum — March 2026',  11),
+    ('2024-0003', 'Field trip to Science Museum — March 2026',  11);
 
 -- Faculty requests sports clearance
-INSERT INTO health_clearances (student_id, purpose, requested_by) VALUES
-    (3, 'Interschool Basketball Tournament — April 2026', 11);
+INSERT INTO health_clearances (student_number, purpose, requested_by) VALUES
+    ('2024-0003', 'Interschool Basketball Tournament — April 2026', 11);
 
 SET @app_current_user_id = 12; -- Prof. Mabini
 
-INSERT INTO health_clearances (student_id, purpose, requested_by) VALUES
-    (5, 'School camping activity — March 2026', 12);
+INSERT INTO health_clearances (student_number, purpose, requested_by) VALUES
+    ('2024-0005', 'School camping activity — March 2026', 12);
 
 -- Doctor processes some clearances
 SET @app_current_user_id = 2; -- Dr. Santos

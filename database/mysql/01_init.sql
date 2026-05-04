@@ -1,6 +1,6 @@
 -- ============================================================================
 -- 01_init.sql
--- School Clinic Management System — Database, Users & Privileges (MySQL)
+-- School Clinic Management System — Database, Roles & Service Account (MySQL)
 -- ============================================================================
 -- Run this file as a MySQL root/admin user:
 --   mysql -u root -p < 01_init.sql
@@ -9,10 +9,12 @@
 -- --------------------------------------------------------
 -- 1. Create the databases
 -- --------------------------------------------------------
--- MySQL does not support schemas like PostgreSQL. We use two databases:
---   school_clinic     — application tables, views, and functions
---   school_clinic_audit — immutable audit trail (append-only)
-
+-- PostgreSQL source-of-truth uses one DB with clinic/audit schemas.
+-- In MySQL, schema == database, so we keep two databases:
+--   school_clinic       — clinic objects
+--   school_clinic_audit — audit objects
+--
+-- Recreate behavior: drop existing databases, then create fresh ones.
 DROP DATABASE IF EXISTS school_clinic;
 DROP DATABASE IF EXISTS school_clinic_audit;
 
@@ -25,62 +27,79 @@ CREATE DATABASE school_clinic_audit
     COLLATE utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 2. Create application users
+-- 2. Create application roles (NOLOGIN-equivalent in MySQL)
 -- --------------------------------------------------------
--- MySQL does not have NOLOGIN group roles like PostgreSQL.
--- We create individual MySQL users for each role. The application
--- connects as 'clinic_app' and the API layer selects the correct
--- user session variables to enforce role-based access.
---
--- In practice, the app connects as clinic_app and sets:
---   SET @app_current_user_id = <user_id>;
---   SET @app_current_role = '<role>';
---   SET @app_encryption_key = '<key>';
---
--- Views and stored procedures enforce access based on these variables.
+-- These mirror PostgreSQL group roles and dedicated definer owners.
 
--- Drop users if they exist (for idempotency)
-DROP USER IF EXISTS 'clinic_admin'@'%';
-DROP USER IF EXISTS 'clinic_doctor'@'%';
-DROP USER IF EXISTS 'clinic_nurse'@'%';
-DROP USER IF EXISTS 'clinic_student'@'%';
-DROP USER IF EXISTS 'clinic_faculty'@'%';
+DROP ROLE IF EXISTS
+    'clinic_admin',
+    'clinic_doctor',
+    'clinic_nurse',
+    'clinic_student',
+    'clinic_faculty',
+    'clinic_trigger_owner',
+    'clinic_rls_owner',
+    'audit_writer_owner';
+
+CREATE ROLE IF NOT EXISTS
+    'clinic_admin',
+    'clinic_doctor',
+    'clinic_nurse',
+    'clinic_student',
+    'clinic_faculty',
+    'clinic_trigger_owner',
+    'clinic_rls_owner',
+    'audit_writer_owner';
+
+-- Clean up legacy direct-login role users from older script versions.
+-- DROP USER IF EXISTS 'clinic_admin'@'%';
+-- DROP USER IF EXISTS 'clinic_doctor'@'%';
+-- DROP USER IF EXISTS 'clinic_nurse'@'%';
+-- DROP USER IF EXISTS 'clinic_student'@'%';
+-- DROP USER IF EXISTS 'clinic_faculty'@'%';
+
+-- --------------------------------------------------------
+-- 3. Create the application service account (LOGIN equivalent)
+-- --------------------------------------------------------
+-- The app connects as clinic_app, then executes SET ROLE per request.
+
 DROP USER IF EXISTS 'clinic_app'@'%';
-
--- Create role-based users
-CREATE USER 'clinic_admin'@'%'   IDENTIFIED BY 'change_me_in_production';
-CREATE USER 'clinic_doctor'@'%'  IDENTIFIED BY 'change_me_in_production';
-CREATE USER 'clinic_nurse'@'%'   IDENTIFIED BY 'change_me_in_production';
-CREATE USER 'clinic_student'@'%' IDENTIFIED BY 'change_me_in_production';
-CREATE USER 'clinic_faculty'@'%' IDENTIFIED BY 'change_me_in_production';
-
--- Application service account — the web app connects as this user
 CREATE USER 'clinic_app'@'%' IDENTIFIED BY 'change_me_in_production';
 
--- --------------------------------------------------------
--- 3. Grant basic database access
--- --------------------------------------------------------
--- Detailed table-level grants are defined in 06_grants.sql.
--- Here we only grant the ability to connect and use the databases.
+-- Grant clinic_app the ability to SET ROLE to any application role.
+GRANT
+    'clinic_admin',
+    'clinic_doctor',
+    'clinic_nurse',
+    'clinic_student',
+    'clinic_faculty'
+TO 'clinic_app'@'%';
 
-GRANT USAGE ON *.* TO 'clinic_admin'@'%';
-GRANT USAGE ON *.* TO 'clinic_doctor'@'%';
-GRANT USAGE ON *.* TO 'clinic_nurse'@'%';
-GRANT USAGE ON *.* TO 'clinic_student'@'%';
-GRANT USAGE ON *.* TO 'clinic_faculty'@'%';
-GRANT USAGE ON *.* TO 'clinic_app'@'%';
+-- Force explicit role switching by the application on each request.
+SET DEFAULT ROLE NONE TO 'clinic_app'@'%';
 
--- clinic_app needs the ability to set session variables and execute routines
-GRANT SELECT, INSERT, UPDATE, DELETE ON school_clinic.* TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic_audit.* TO 'clinic_app'@'%';
-GRANT EXECUTE ON school_clinic.* TO 'clinic_app'@'%';
+-- --------------------------------------------------------
+-- 4. Bootstrap-level grants
+-- --------------------------------------------------------
+-- Detailed object-level grants are in 06_grants.sql.
+GRANT USAGE ON *.* TO
+    'clinic_app'@'%',
+    'clinic_admin',
+    'clinic_doctor',
+    'clinic_nurse',
+    'clinic_student',
+    'clinic_faculty',
+    'clinic_trigger_owner',
+    'clinic_rls_owner',
+    'audit_writer_owner';
 
 FLUSH PRIVILEGES;
 
 -- ============================================================================
 -- Verification
 -- ============================================================================
--- Run these queries to verify setup:
---   SHOW DATABASES LIKE 'school_clinic%';
---   SELECT user, host FROM mysql.user WHERE user LIKE 'clinic_%';
+-- SHOW DATABASES LIKE 'school_clinic%';
+-- SELECT user, host FROM mysql.user WHERE user = 'clinic_app';
+-- SELECT from_user, from_host, to_user, to_host FROM mysql.role_edges
+-- WHERE from_user = 'clinic_app';
 -- ============================================================================

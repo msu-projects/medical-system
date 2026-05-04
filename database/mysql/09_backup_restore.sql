@@ -2,8 +2,8 @@
 -- 09_backup_restore.sql
 -- School Clinic Management System — Backup & Restore Procedures (MySQL)
 -- ============================================================================
--- This file documents the backup and restore strategy for the MySQL version.
--- The actual automation would be implemented in shell scripts.
+-- This file documents the backup and restore strategy for the MySQL deployment.
+-- The actual automation is in scripts/backup.sh and scripts/restore.sh.
 --
 -- For a medical records system, backups are CRITICAL:
 --   - Patient data must never be lost
@@ -21,7 +21,7 @@
 --    │ Component            │ Tool                          │ Frequency    │
 --    ├──────────────────────┼───────────────────────────────┼──────────────┤
 --    │ Both databases       │ mysqldump --single-transaction│ Daily        │
---    │ User accounts/grants │ pt-show-grants / mysqldump    │ Daily        │
+--    │ Roles & grants       │ mysql system grants export     │ Daily        │
 --    │ Configuration        │ my.cnf                        │ On change    │
 --    └──────────────────────┴───────────────────────────────┴──────────────┘
 --
@@ -38,8 +38,9 @@
 --    - Monthly backups: retained for 12 months (1st of month)
 --
 -- 4. BACKUP USER:
---    Backups should be performed with a user that has sufficient privileges
---    to read ALL data. Use --single-transaction for consistent InnoDB backups.
+--    Backups must be run by an account with full access to both databases.
+--    Using a restricted account can silently produce partial dumps.
+--    Use --single-transaction for consistent InnoDB backups.
 --
 -- ============================================================================
 
@@ -124,7 +125,7 @@ END //
 
 DELIMITER ;
 
-GRANT EXECUTE ON PROCEDURE school_clinic.fn_backup_verify TO 'clinic_admin'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.fn_backup_verify TO 'clinic_admin';
 
 -- ============================================================================
 -- IMPORTANT NOTES
