@@ -61,19 +61,19 @@ INSERT INTO clinic.users (username, password_hash, email, first_name, last_name,
 -- 2. STUDENTS — Extended Profiles
 -- ============================================================================
 
-INSERT INTO clinic.students (user_id, student_number, year_of_enrollment, date_of_birth, sex, contact_number, emergency_contact_name, emergency_contact_number, year_level, section, blood_type, allergies) VALUES
-    (6,  2024, '2000-0001', '2006-03-15', 'Male',   '09171234567', 'Maria Dela Cruz',    '09181234567', 'Grade 11', 'STEM-A',    'O+',  NULL),
-    (7,  2024, '2000-0002', '2006-07-22', 'Female', '09172345678', 'Pedro Reyes',        '09182345678', 'Grade 11', 'STEM-A',    'A+',  'Penicillin'),
-    (8,  2024, '2000-0003', '2005-11-30', 'Male',   '09173456789', 'Catalina Bonifacio', '09183456789', 'Grade 12', 'HUMSS-B',   'B+',  NULL),
-    (9,  2024, '2000-0004', '2006-01-10', 'Female', '09174567890', 'Diego Silang',       '09184567890', 'Grade 11', 'ABM-A',     'AB+', 'Sulfa drugs, Ibuprofen'),
-    (10, 2024, '2000-0005', '2005-06-19', 'Male',   '09175678901', 'Teodora Alonso',     '09185678901', 'Grade 12', 'STEM-B',    'O-',  NULL);
+INSERT INTO clinic.students (user_id, year_of_enrollment, student_number, date_of_birth, sex, contact_number, emergency_contact_name, emergency_contact_number, year_level, section, blood_type, allergies) VALUES
+    (6,  2024, '2024-0001', '2006-03-15', 'Male',   '09171234567', 'Maria Dela Cruz',    '09181234567', 'Grade 11', 'STEM-A',    'O+',  NULL),
+    (7,  2024, '2024-0002', '2006-07-22', 'Female', '09172345678', 'Pedro Reyes',        '09182345678', 'Grade 11', 'STEM-A',    'A+',  'Penicillin'),
+    (8,  2024, '2024-0003', '2005-11-30', 'Male',   '09173456789', 'Catalina Bonifacio', '09183456789', 'Grade 12', 'HUMSS-B',   'B+',  NULL),
+    (9,  2024, '2024-0004', '2006-01-10', 'Female', '09174567890', 'Diego Silang',       '09184567890', 'Grade 11', 'ABM-A',     'AB+', 'Sulfa drugs, Ibuprofen'),
+    (10, 2024, '2024-0005', '2005-06-19', 'Male',   '09175678901', 'Teodora Alonso',     '09185678901', 'Grade 12', 'STEM-B',    'O-',  NULL);
 
 -- ============================================================================
 -- 3. QR CODES — One per Student
 -- ============================================================================
 
 INSERT INTO clinic.qr_codes (student_number) VALUES
-    ('2000-0001'), ('2000-0002'), ('2000-0003'), ('2000-0004'), ('2000-0005');
+    ('2024-0001'), ('2024-0002'), ('2024-0003'), ('2024-0004'), ('2024-0005');
 
 -- ============================================================================
 -- 4. MEDICINES — Basic Catalog
@@ -100,7 +100,7 @@ INSERT INTO clinic.medicines (name, description, unit) VALUES
 SELECT set_config('app.current_user_id', '4', true);  -- Nurse Garcia
 
 SELECT clinic.create_consultation(
-    p_student_number  := '2000-0001',
+    p_student_number  := '2024-0001',
     p_attended_by     := 4,
     p_chief_complaint := 'Headache and fever since this morning',
     p_diagnosis       := 'Acute viral upper respiratory tract infection',
@@ -113,7 +113,7 @@ SELECT clinic.create_consultation(
 
 -- Consultation 2: Maria Clara — allergic reaction (attended by Nurse Garcia)
 SELECT clinic.create_consultation(
-    p_student_number  := '2000-0002',
+    p_student_number  := '2024-0002',
     p_attended_by     := 4,
     p_chief_complaint := 'Skin rashes and itching after eating seafood',
     p_diagnosis       := 'Allergic dermatitis — likely food allergen (seafood)',
@@ -128,7 +128,7 @@ SELECT clinic.create_consultation(
 SELECT set_config('app.current_user_id', '5', true);  -- Nurse Cruz
 
 SELECT clinic.create_consultation(
-    p_student_number  := '2000-0003',
+    p_student_number  := '2024-0003',
     p_attended_by     := 5,
     p_chief_complaint := 'Twisted ankle during basketball practice',
     p_diagnosis       := 'Grade 1 ankle sprain — lateral ligament',
@@ -146,7 +146,7 @@ UPDATE clinic.consultations SET status = 'referred' WHERE consultation_id = 3;
 SELECT set_config('app.current_user_id', '4', true);  -- Nurse Garcia
 
 SELECT clinic.create_consultation(
-    p_student_number  := '2000-0004',
+    p_student_number  := '2024-0004',
     p_attended_by     := 4,
     p_chief_complaint := 'Severe abdominal cramps since class started',
     p_diagnosis       := 'Dysmenorrhea (primary)',
@@ -161,7 +161,7 @@ SELECT clinic.create_consultation(
 SELECT set_config('app.current_user_id', '5', true);  -- Nurse Cruz
 
 SELECT clinic.create_consultation(
-    p_student_number  := '2000-0005',
+    p_student_number  := '2024-0005',
     p_attended_by     := 5,
     p_chief_complaint := 'Stomach pain and nausea after lunch',
     p_diagnosis       := 'Acute gastritis — likely dietary cause',
@@ -176,7 +176,7 @@ SELECT clinic.create_consultation(
 SELECT set_config('app.current_user_id', '4', true);
 
 SELECT clinic.create_consultation(
-    p_student_number  := '2000-0001',
+    p_student_number  := '2024-0001',
     p_attended_by     := 4,
     p_chief_complaint := 'Follow-up: fever resolved but still has mild cough',
     p_diagnosis       := 'Resolving URTI with residual cough',
@@ -249,18 +249,18 @@ SELECT set_config('app.current_user_id', '11', true);  -- Prof. Luna
 
 -- Faculty requests clearance for field trip
 INSERT INTO clinic.health_clearances (student_number, purpose, requested_by) VALUES
-    ('2000-0001', 'Field trip to Science Museum — March 2026',  11),
-    ('2000-0002', 'Field trip to Science Museum — March 2026',  11),
-    ('2000-0003', 'Field trip to Science Museum — March 2026',  11);
+    ('2024-0001', 'Field trip to Science Museum — March 2026',  11),
+    ('2024-0002', 'Field trip to Science Museum — March 2026',  11),
+    ('2024-0003', 'Field trip to Science Museum — March 2026',  11);
 
 -- Faculty requests sports clearance
 INSERT INTO clinic.health_clearances (student_number, purpose, requested_by) VALUES
-    ('2000-0003', 'Interschool Basketball Tournament — April 2026', 11);
+    ('2024-0003', 'Interschool Basketball Tournament — April 2026', 11);
 
 SELECT set_config('app.current_user_id', '12', true);  -- Prof. Mabini
 
 INSERT INTO clinic.health_clearances (student_number, purpose, requested_by) VALUES
-    ('2000-0005', 'School camping activity — March 2026', 12);
+    ('2024-0005', 'School camping activity — March 2026', 12);
 
 -- Doctor processes some clearances
 SELECT set_config('app.current_user_id', '2', true);  -- Dr. Santos

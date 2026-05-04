@@ -55,6 +55,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA clinic REVOKE ALL ON FUNCTIONS FROM PUBLIC;
 -- ============================================================================
 
 GRANT USAGE ON SCHEMA clinic TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student, clinic_faculty;
+GRANT USAGE ON SCHEMA clinic TO clinic_trigger_owner, clinic_rls_owner;
 GRANT USAGE ON SCHEMA audit  TO clinic_admin;
 
 -- ============================================================================

@@ -183,7 +183,7 @@ COMMENT ON ROLE clinic_app IS 'Application service account — connects to DB, t
 -- 7. Grant schema usage to roles
 -- --------------------------------------------------------
 GRANT USAGE ON SCHEMA clinic TO clinic_admin, clinic_doctor, clinic_nurse, clinic_student, clinic_faculty;
-GRANT USAGE ON SCHEMA audit  TO clinic_admin;
+GRANT USAGE ON SCHEMA audit  TO clinic_admin, audit_writer_owner;
 
 -- Admin needs full control for DDL operations
 GRANT CREATE ON SCHEMA clinic TO clinic_admin;

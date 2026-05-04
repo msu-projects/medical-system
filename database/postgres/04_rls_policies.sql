@@ -29,28 +29,24 @@ DECLARE
     v_expected_db_role TEXT;
 BEGIN
     v_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INT;
-    v_role := NULLIF(current_setting('app.current_role', true), '');
 
-    IF v_user_id IS NULL OR v_role IS NULL THEN
+    IF v_user_id IS NULL THEN
         RETURN NULL;
     END IF;
 
-    IF v_role NOT IN ('admin', 'doctor', 'nurse', 'student', 'faculty') THEN
-        RETURN NULL;
-    END IF;
-
-    v_expected_db_role := 'clinic_' || v_role;
-    IF current_user <> v_expected_db_role THEN
-        RETURN NULL;
-    END IF;
-
-    PERFORM 1
+    -- Look up the user's role from the database
+    SELECT u.role INTO v_role
     FROM clinic.users u
     WHERE u.user_id = v_user_id
-      AND u.role = v_role
       AND u.is_active = TRUE;
 
-    IF NOT FOUND THEN
+    IF v_role IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    -- Verify session role matches the user's database role
+    v_expected_db_role := 'clinic_' || v_role;
+    IF current_user <> v_expected_db_role THEN
         RETURN NULL;
     END IF;
 
@@ -58,7 +54,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
+$$ LANGUAGE plpgsql STABLE SET search_path = pg_catalog, clinic;
 
 ALTER FUNCTION clinic.current_app_user_id() OWNER TO clinic_rls_owner;
 GRANT SELECT ON clinic.users TO clinic_rls_owner;
@@ -70,17 +66,26 @@ COMMENT ON FUNCTION clinic.current_app_user_id() IS
 CREATE OR REPLACE FUNCTION clinic.current_app_role()
 RETURNS TEXT AS $$
 DECLARE
+    v_user_id INT;
     v_role TEXT;
 BEGIN
-    v_role := NULLIF(current_setting('app.current_role', true), '');
+    v_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INT;
+    
+    IF v_user_id IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    -- Look up the user's role from the database
+    SELECT u.role INTO v_role
+    FROM clinic.users u
+    WHERE u.user_id = v_user_id
+      AND u.is_active = TRUE;
+
     IF v_role IS NULL THEN
         RETURN NULL;
     END IF;
 
-    IF v_role NOT IN ('admin', 'doctor', 'nurse', 'student', 'faculty') THEN
-        RETURN NULL;
-    END IF;
-
+    -- Verify session role matches the user's database role
     IF current_user <> ('clinic_' || v_role) THEN
         RETURN NULL;
     END IF;
@@ -89,7 +94,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
+$$ LANGUAGE plpgsql STABLE SET search_path = pg_catalog, clinic;
 
 ALTER FUNCTION clinic.current_app_role() OWNER TO clinic_rls_owner;
 
@@ -147,6 +152,12 @@ CREATE POLICY admin_all_users ON clinic.users
 CREATE POLICY staff_read_users ON clinic.users
     FOR SELECT
     TO clinic_doctor, clinic_nurse
+    USING (true);
+
+-- Internal trigger owner: needs read access for role-enforcement lookups
+CREATE POLICY trigger_owner_read_users ON clinic.users
+    FOR SELECT
+    TO clinic_trigger_owner
     USING (true);
 
 -- Student: can only see their own user record

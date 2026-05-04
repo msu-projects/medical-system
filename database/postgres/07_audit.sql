@@ -203,8 +203,8 @@ CREATE TRIGGER trg_audit_health_clearances
 REVOKE ALL ON audit.activity_log FROM PUBLIC;
 REVOKE ALL ON SCHEMA audit FROM PUBLIC;
 
--- Grant schema usage to admin only
-GRANT USAGE ON SCHEMA audit TO clinic_admin;
+-- Grant schema usage to admin and the audit trigger owner
+GRANT USAGE ON SCHEMA audit TO clinic_admin, audit_writer_owner;
 
 -- Admin: can only READ audit records (no UPDATE, no DELETE)
 GRANT SELECT ON audit.activity_log TO clinic_admin;
