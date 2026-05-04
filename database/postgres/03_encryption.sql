@@ -110,7 +110,7 @@ COMMENT ON FUNCTION clinic.decrypt_data(BYTEA) IS
 --   );
 
 CREATE OR REPLACE FUNCTION clinic.create_consultation(
-    p_student_number  VARCHAR(20),
+    p_student_number  VARCHAR(10),
     p_attended_by     INT,
     p_chief_complaint TEXT DEFAULT NULL,
     p_diagnosis       TEXT DEFAULT '',

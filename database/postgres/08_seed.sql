@@ -61,12 +61,12 @@ INSERT INTO clinic.users (username, password_hash, email, first_name, last_name,
 -- 2. STUDENTS — Extended Profiles
 -- ============================================================================
 
-INSERT INTO clinic.students (user_id, year_of_enrollment, student_number, date_of_birth, sex, contact_number, emergency_contact_name, emergency_contact_number, year_level, section, blood_type, allergies) VALUES
-    (6,  2024, '2024-0001', '2006-03-15', 'Male',   '09171234567', 'Maria Dela Cruz',    '09181234567', 'Grade 11', 'STEM-A',    'O+',  NULL),
-    (7,  2024, '2024-0002', '2006-07-22', 'Female', '09172345678', 'Pedro Reyes',        '09182345678', 'Grade 11', 'STEM-A',    'A+',  'Penicillin'),
-    (8,  2024, '2024-0003', '2005-11-30', 'Male',   '09173456789', 'Catalina Bonifacio', '09183456789', 'Grade 12', 'HUMSS-B',   'B+',  NULL),
-    (9,  2024, '2024-0004', '2006-01-10', 'Female', '09174567890', 'Diego Silang',       '09184567890', 'Grade 11', 'ABM-A',     'AB+', 'Sulfa drugs, Ibuprofen'),
-    (10, 2024, '2024-0005', '2005-06-19', 'Male',   '09175678901', 'Teodora Alonso',     '09185678901', 'Grade 12', 'STEM-B',    'O-',  NULL);
+INSERT INTO clinic.students (user_id, year_of_enrollment, date_of_birth, sex, contact_number, emergency_contact_name, emergency_contact_number, year_level, section, blood_type, allergies) VALUES
+    (6,  2024, '2006-03-15', 'Male',   '09171234567', 'Maria Dela Cruz',    '09181234567', 'Grade 11', 'STEM-A',    'O+',  NULL),
+    (7,  2024, '2006-07-22', 'Female', '09172345678', 'Pedro Reyes',        '09182345678', 'Grade 11', 'STEM-A',    'A+',  'Penicillin'),
+    (8,  2024, '2005-11-30', 'Male',   '09173456789', 'Catalina Bonifacio', '09183456789', 'Grade 12', 'HUMSS-B',   'B+',  NULL),
+    (9,  2024, '2006-01-10', 'Female', '09174567890', 'Diego Silang',       '09184567890', 'Grade 11', 'ABM-A',     'AB+', 'Sulfa drugs, Ibuprofen'),
+    (10, 2024, '2005-06-19', 'Male',   '09175678901', 'Teodora Alonso',     '09185678901', 'Grade 12', 'STEM-B',    'O-',  NULL);
 
 -- ============================================================================
 -- 3. QR CODES — One per Student
@@ -79,17 +79,17 @@ INSERT INTO clinic.qr_codes (student_number) VALUES
 -- 4. MEDICINES — Basic Catalog
 -- ============================================================================
 
-INSERT INTO clinic.medicines (name, description, unit) VALUES
-    ('Paracetamol 500mg',     'For fever and mild pain relief',         'tablet'),
-    ('Ibuprofen 200mg',       'Anti-inflammatory and pain relief',      'tablet'),
-    ('Mefenamic Acid 500mg',  'For moderate pain and dysmenorrhea',     'capsule'),
-    ('Cetirizine 10mg',       'Antihistamine for allergies',            'tablet'),
-    ('Loperamide 2mg',        'For acute diarrhea',                     'capsule'),
-    ('Oral Rehydration Salts','For dehydration',                        'sachet'),
-    ('Betadine Solution',     'Antiseptic for wounds',                  'ml'),
-    ('Band-Aid',              'Adhesive bandage for minor wounds',      'piece'),
-    ('Cotton Balls',          'For wound cleaning and dressing',        'piece'),
-    ('Amoxicillin 500mg',     'Antibiotic (requires prescription)',     'capsule');
+INSERT INTO clinic.medicines (name, description, unit, available_quantity) VALUES
+    ('Paracetamol 500mg',     'For fever and mild pain relief',         'tablet', 5),
+    ('Ibuprofen 200mg',       'Anti-inflammatory and pain relief',      'tablet', 5),
+    ('Mefenamic Acid 500mg',  'For moderate pain and dysmenorrhea',     'capsule', 5),
+    ('Cetirizine 10mg',       'Antihistamine for allergies',            'tablet', 5),
+    ('Loperamide 2mg',        'For acute diarrhea',                     'capsule', 5),
+    ('Oral Rehydration Salts','For dehydration',                        'sachet', 5),
+    ('Betadine Solution',     'Antiseptic for wounds',                  'ml', 5),
+    ('Band-Aid',              'Adhesive bandage for minor wounds',      'piece', 5),
+    ('Cotton Balls',          'For wound cleaning and dressing',        'piece', 5),
+    ('Amoxicillin 500mg',     'Antibiotic (requires prescription)',     'capsule', 5);
 
 -- ============================================================================
 -- 5. CONSULTATIONS — Encrypted Medical Records
