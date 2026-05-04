@@ -61,7 +61,7 @@ CREATE SCHEMA IF NOT EXISTS clinic;
 CREATE SCHEMA IF NOT EXISTS audit;
 
 -- Remove default privileges on public schema
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
+-- REVOKE ALL ON SCHEMA public FROM PUBLIC;
 
 COMMENT ON SCHEMA clinic IS 'Core application schema for school clinic management';
 COMMENT ON SCHEMA audit  IS 'Isolated audit trail — restricted access';

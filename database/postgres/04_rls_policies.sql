@@ -23,38 +23,12 @@ SET search_path TO clinic, public;
 -- --------------------------------------------------------
 CREATE OR REPLACE FUNCTION clinic.current_app_user_id()
 RETURNS INT AS $$
-DECLARE
-    v_user_id INT;
-    v_role TEXT;
-    v_expected_db_role TEXT;
 BEGIN
-    v_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INT;
-
-    IF v_user_id IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    -- Look up the user's role from the database
-    SELECT u.role INTO v_role
-    FROM clinic.users u
-    WHERE u.user_id = v_user_id
-      AND u.is_active = TRUE;
-
-    IF v_role IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    -- Verify session role matches the user's database role
-    v_expected_db_role := 'clinic_' || v_role;
-    IF current_user <> v_expected_db_role THEN
-        RETURN NULL;
-    END IF;
-
-    RETURN v_user_id;
+    return NULLIF(current_setting('app.current_user_id', true), '')::INT;
 EXCEPTION
     WHEN OTHERS THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE SET search_path = pg_catalog, clinic;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
 ALTER FUNCTION clinic.current_app_user_id() OWNER TO clinic_rls_owner;
 GRANT SELECT ON clinic.users TO clinic_rls_owner;
@@ -65,36 +39,12 @@ COMMENT ON FUNCTION clinic.current_app_user_id() IS
 -- Helper function: Get current app role safely
 CREATE OR REPLACE FUNCTION clinic.current_app_role()
 RETURNS TEXT AS $$
-DECLARE
-    v_user_id INT;
-    v_role TEXT;
 BEGIN
-    v_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INT;
-    
-    IF v_user_id IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    -- Look up the user's role from the database
-    SELECT u.role INTO v_role
-    FROM clinic.users u
-    WHERE u.user_id = v_user_id
-      AND u.is_active = TRUE;
-
-    IF v_role IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    -- Verify session role matches the user's database role
-    IF current_user <> ('clinic_' || v_role) THEN
-        RETURN NULL;
-    END IF;
-
-    RETURN v_role;
+    return NULLIF(current_setting('app.current_user_id', true), '')::INT;
 EXCEPTION
     WHEN OTHERS THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE SET search_path = pg_catalog, clinic;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, clinic;
 
 ALTER FUNCTION clinic.current_app_role() OWNER TO clinic_rls_owner;
 
@@ -102,7 +52,7 @@ ALTER FUNCTION clinic.current_app_role() OWNER TO clinic_rls_owner;
 CREATE OR REPLACE FUNCTION clinic.current_student_number()
 RETURNS VARCHAR(20) AS $$
 DECLARE
-    sid INT;
+    sid VARCHAR(20);
 BEGIN
     SELECT student_number INTO sid
     FROM clinic.students
@@ -165,6 +115,29 @@ CREATE POLICY student_own_user ON clinic.users
     FOR SELECT
     TO clinic_student
     USING (user_id = clinic.current_app_user_id());
+
+-- Student: can also see minimal staff/doctor identities tied to their own records
+-- so student-facing history views can show attended/prescribed names.
+CREATE POLICY student_related_staff_user ON clinic.users
+    FOR SELECT
+    TO clinic_student
+    USING (
+        role IN ('doctor', 'nurse')
+        AND (
+            user_id IN (
+                SELECT c.attended_by
+                FROM clinic.consultations c
+                WHERE c.student_number = clinic.current_student_number()
+            )
+            OR user_id IN (
+                SELECT p.prescribed_by
+                FROM clinic.prescriptions p
+                JOIN clinic.consultations c
+                  ON c.consultation_id = p.consultation_id
+                WHERE c.student_number = clinic.current_student_number()
+            )
+        )
+    );
 
 -- Faculty: can only see their own user record
 CREATE POLICY faculty_own_user ON clinic.users

@@ -55,7 +55,7 @@ SELECT
 FROM
     clinic.consultations c
     JOIN clinic.students s ON c.student_number = s.student_number
-    JOIN clinic.users u_staff ON c.attended_by = u_staff.user_id
+    LEFT JOIN clinic.users u_staff ON c.attended_by = u_staff.user_id
     LEFT JOIN clinic.prescriptions p ON c.consultation_id = p.consultation_id
     LEFT JOIN clinic.users u_doc ON p.prescribed_by = u_doc.user_id
     LEFT JOIN clinic.consultation_medicines cm ON c.consultation_id = cm.consultation_id
