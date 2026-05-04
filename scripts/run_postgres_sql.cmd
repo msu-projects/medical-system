@@ -40,11 +40,11 @@ echo  Database: %DB_NAME%
 echo  Host: %DB_HOST%:%DB_PORT%
 echo  User: %DB_USER%
 echo  SQL dir: %SQL_DIR%
-echo  Excluding: *seed*.sql
+echo  Including all .sql files
 echo ========================================
 
 set /a TOTAL=0
-for /f "delims=" %%F in ('dir /b /on "%SQL_DIR%\*.sql" ^| findstr /i /v "seed"') do (
+for /f "delims=" %%F in ('dir /b /on "%SQL_DIR%\*.sql"') do (
     set /a TOTAL+=1
 )
 
@@ -54,14 +54,14 @@ if %TOTAL% EQU 0 (
 )
 
 set /a INDEX=0
-for /f "delims=" %%F in ('dir /b /on "%SQL_DIR%\*.sql" ^| findstr /i /v "seed"') do (
+for /f "delims=" %%F in ('dir /b /on "%SQL_DIR%\*.sql"') do (
     set /a INDEX+=1
     echo.
     echo [!INDEX!/%TOTAL%] Executing %SQL_DIR%\%%F ...
 
     set "CURRENT_FILE=%%~nxF"
     if /I "!CURRENT_FILE!"=="01_init.sql" (
-        psql -h "%DB_HOST%" -p "%DB_PORT%" -U "%DB_USER%" -v ON_ERROR_STOP=1 -f "%SQL_DIR%\%%F"
+        psql -h "%DB_HOST%" -p "%DB_PORT%" -U "%DB_USER%" -v ON_ERROR_STOP=1 -v recreate_database=1 -f "%SQL_DIR%\%%F"
     ) else if /I "!CURRENT_FILE!"=="init.sql" (
         psql -h "%DB_HOST%" -p "%DB_PORT%" -U "%DB_USER%" -v ON_ERROR_STOP=1 -f "%SQL_DIR%\%%F"
     ) else (

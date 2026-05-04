@@ -44,7 +44,7 @@ echo " SQL dir: ${SQL_DIR}"
 echo " Excluding: *seed*.sql"
 echo "========================================"
 
-mapfile -t SQL_FILES < <(find "${SQL_DIR}" -maxdepth 1 -type f -name "*.sql" ! -iname "*seed*.sql" | sort)
+mapfile -t SQL_FILES < <(find "${SQL_DIR}" -maxdepth 1 -type f -name "*.sql" | sort)
 
 if [[ ${#SQL_FILES[@]} -eq 0 ]]; then
     echo "No SQL files found to execute."
@@ -66,6 +66,7 @@ for file in "${SQL_FILES[@]}"; do
             -p "${DB_PORT}" \
             -U "${DB_USER}" \
             -v ON_ERROR_STOP=1 \
+            -v recreate_database=1 \
             -f "${file}"
     else
         psql \
