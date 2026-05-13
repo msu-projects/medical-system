@@ -4,7 +4,7 @@
 
 **System:** School Clinic Management System
 **Database:** `school_clinic_db` / Schema: `clinic`
-**Last Updated:** 2026-02-22
+**Last Updated:** 2026-05-13
 
 ---
 
@@ -16,6 +16,7 @@
 4. [P4 — Prescription & Dispensing](#p4--prescription--dispensing)
 5. [P5 — Health Clearance Management](#p5--health-clearance-management)
 6. [P6 — System & User Administration](#p6--system--user-administration)
+7. [P7 — View Medical History](#p7--view-medical-history)
 
 ---
 
@@ -395,6 +396,64 @@ Provides full control over user accounts, role assignments, and system-level set
 
 ---
 
+## P7 — View Medical History
+
+**Process ID:** P7
+**Process Name:** View Medical History
+**Module:** Student Portal
+**Triggered By:** Student opening the Medical History page and submitting login credentials (or using an active authenticated session)
+
+### Description
+
+Authenticates the student and compiles a longitudinal medical history view from consultations, prescriptions, and dispensed medicines. The process returns only student-allowed data and excludes clinical-only notes.
+
+### Inputs
+
+| Input                                     | Source                    | Format                        |
+| ----------------------------------------- | ------------------------- | ----------------------------- |
+| `username`, `password` or active session  | Student Portal (Student)  | `VARCHAR(50)`, String / Token |
+| Student authentication context            | `clinic.users`            | User record (`role`, status)  |
+| Consultation history                      | `clinic.consultations`    | Records by `student_id`       |
+| Prescription history                      | `clinic.prescriptions`    | Records by `consultation_id`  |
+| Dispensed medicine history                | `clinic.consultation_medicines` | Records by `consultation_id`  |
+
+### Processing Logic
+
+1. Receive student access request from the Student Portal.
+2. Authenticate against `clinic.users`, ensuring the account is active and the role is `student`.
+3. Resolve the student's profile context and retrieve consultation history from `clinic.consultations` for that student.
+4. Collect related prescription records from `clinic.prescriptions` using consultation references.
+5. Collect dispensed medicine records from `clinic.consultation_medicines` using consultation references.
+6. Build a unified medical history timeline grouped per consultation (consultation details + prescriptions + dispensed medicines).
+7. Filter out restricted fields (for example, clinical-only `treatment_notes`) before rendering.
+8. Return the final medical history view to the student portal.
+
+### Outputs
+
+| Output                        | Destination      | Description                                                      |
+| ----------------------------- | ---------------- | ---------------------------------------------------------------- |
+| Medical history display       | Student Portal   | Chronological student-facing view of consultations and medicines |
+| Authentication/access error   | Student Portal   | Generic error for invalid credentials or unauthorized access      |
+
+### Business Rules
+
+- Only authenticated users with `role = 'student'` may access this process.
+- Students may view only their own history; records must be filtered by the authenticated student's identity.
+- `treatment_notes` must never be exposed through the Student Portal.
+- History data is read-only in this process; no consultation, prescription, or dispensing records are modified.
+- If no history exists, the portal must return an empty-state response (not a system error).
+
+### Data Stores Accessed
+
+| Store                          | Operation                                               |
+| ------------------------------ | ------------------------------------------------------- |
+| `clinic.users`                 | READ (student authentication and role/status validation) |
+| `clinic.consultations`         | READ (consultation history by student)                  |
+| `clinic.prescriptions`         | READ (prescription records by consultation)             |
+| `clinic.consultation_medicines` | READ (dispensed medicine records by consultation)      |
+
+---
+
 ## Summary Table
 
 | Process                             | Role(s) Involved                       | Primary Data Stores                                                         |
@@ -405,3 +464,4 @@ Provides full control over user accounts, role assignments, and system-level set
 | P4 — Prescription & Dispensing      | Doctor, Clinic Staff, Student          | `clinic.prescriptions`, `clinic.medicines`, `clinic.consultation_medicines` |
 | P5 — Health Clearance Management    | Faculty, Clinic Staff, Doctor, Student | `clinic.health_clearances`, `clinic.consultations`                          |
 | P6 — System & User Administration   | System Admin                           | `clinic.users`, `clinic.students`, `clinic.qr_codes`                        |
+| P7 — View Medical History           | Student                                | `clinic.users`, `clinic.consultations`, `clinic.prescriptions`, `clinic.consultation_medicines` |
