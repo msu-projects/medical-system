@@ -55,27 +55,118 @@ Use it to decompose each Level 0 process (`1.0` to `7.0`) into smaller subproces
 
 ## 4.1 Decomposition of **1.0 Manage Accounts**
 
-### Subprocesses
+Instead of one combined child diagram, draw **four separate Level 1 diagrams** for account CRUD:
 
-- `1.1 Receive Account Request`
-- `1.2 Validate Account Data`
-- `1.3 Create/Update User Account`
-- `1.4 Create Student Profile (if role=student)`
-- `1.5 Generate/Deactivate QR Token (if role=student)`
+- **Diagram A: Add Account**
+- **Diagram B: Read Account**
+- **Diagram C: Update Account**
+- **Diagram D: Delete Account**
 
-### Parent-balanced flows (must appear)
+### 4.1.A Level 1 DFD — **Add Account**
 
-- `E5 System Admin -> 1.x : Account Data`
-- `1.x -> D1 Users : User Record`
-- `1.x -> D2 Students : Student Profile`
-- `1.x -> D3 QR Codes : QR Token`
+#### Subprocesses
 
-### Internal flow sequence
+- `1.1 Receive Add Account Request`
+- `1.2 Validate New Account Data`
+- `1.3 Create User Account Record`
+- `1.4 Create Student Profile and QR (if role=student)`
+- `1.5 Return Add Account Result`
 
-- `1.1 -> 1.2 : Account Request`
+#### Parent-balanced flows (must appear)
+
+- `E5 System Admin -> 1.x : New Account Data`
+- `1.x -> D1 Users : New User Record`
+- `1.x -> D2 Students : New Student Profile`
+- `1.x -> D3 QR Codes : New QR Token`
+- `1.x -> E5 System Admin : Add Account Result`
+
+#### Internal flow sequence
+
+- `1.1 -> 1.2 : Account Creation Payload`
 - `1.2 -> 1.3 : Validated User Data`
-- `1.3 -> 1.4 : Student Role Payload`
-- `1.4 -> 1.5 : Student ID for QR`
+- `1.3 -> 1.4 : Student Role Context`
+- `1.4 -> 1.5 : Creation Outcome`
+
+### 4.1.B Level 1 DFD — **Read Account**
+
+#### Subprocesses
+
+- `1.6 Receive Read Account Request`
+- `1.7 Validate Search Criteria`
+- `1.8 Retrieve Account Record`
+- `1.9 Build Account View`
+- `1.10 Return Account Details`
+
+#### Parent-balanced flows (must appear)
+
+- `E5 System Admin -> 1.x : Account Lookup Request`
+- `D1 Users -> 1.x : User Record`
+- `D2 Students -> 1.x : Student Profile`
+- `D3 QR Codes -> 1.x : QR Token`
+- `1.x -> E5 System Admin : Account Details`
+
+#### Internal flow sequence
+
+- `1.6 -> 1.7 : Lookup Input`
+- `1.7 -> 1.8 : Validated Lookup Criteria`
+- `1.8 -> 1.9 : Retrieved Account Data`
+- `1.9 -> 1.10 : Account View Payload`
+
+### 4.1.C Level 1 DFD — **Update Account**
+
+#### Subprocesses
+
+- `1.11 Receive Update Account Request`
+- `1.12 Validate Update Data and Rules`
+- `1.13 Retrieve Existing Account`
+- `1.14 Update User Account Record`
+- `1.15 Update Student Profile and QR (if role=student)`
+- `1.16 Return Update Result`
+
+#### Parent-balanced flows (must appear)
+
+- `E5 System Admin -> 1.x : Account Update Data`
+- `D1 Users -> 1.x : Existing User Record`
+- `1.x -> D1 Users : Updated User Record`
+- `1.x -> D2 Students : Updated Student Profile`
+- `1.x -> D3 QR Codes : Updated QR Token`
+- `1.x -> E5 System Admin : Update Account Result`
+
+#### Internal flow sequence
+
+- `1.11 -> 1.12 : Update Payload`
+- `1.12 -> 1.13 : Validated Update Request`
+- `1.13 -> 1.14 : Current + New Account Data`
+- `1.14 -> 1.15 : Student Update Context`
+- `1.15 -> 1.16 : Update Outcome`
+
+### 4.1.D Level 1 DFD — **Delete Account**
+
+#### Subprocesses
+
+- `1.17 Receive Delete Account Request`
+- `1.18 Validate Delete Authorization`
+- `1.19 Retrieve target account`
+- `1.20 Deactivate/Delete User Account`
+- `1.21 Deactivate Student Profile and QR (if role=student)`
+- `1.22 Return Delete Result`
+
+#### Parent-balanced flows (must appear)
+
+- `E5 System Admin -> 1.x : Account Delete Request`
+- `D1 Users -> 1.x : Target User Record`
+- `1.x -> D1 Users : Deleted/Deactivated User Record`
+- `1.x -> D2 Students : Deleted/Deactivated Student Profile`
+- `1.x -> D3 QR Codes : Deactivated QR Token`
+- `1.x -> E5 System Admin : Delete Account Result`
+
+#### Internal flow sequence
+
+- `1.17 -> 1.18 : Delete Request Data`
+- `1.18 -> 1.19 : Authorized Delete Request`
+- `1.19 -> 1.20 : Target Account Context`
+- `1.20 -> 1.21 : Student Deactivation Context`
+- `1.21 -> 1.22 : Delete Outcome`
 
 ---
 
@@ -244,4 +335,3 @@ Use it to decompose each Level 0 process (`1.0` to `7.0`) into smaller subproces
 - [ ] Process names are verb phrases.
 - [ ] Flow labels are noun phrases.
 - [ ] Store IDs (`D1`–`D8`) and process numbers (`X.1`, `X.2`) are consistent.
-

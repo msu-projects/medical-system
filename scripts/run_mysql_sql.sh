@@ -17,7 +17,7 @@ set -euo pipefail
 
 DB_NAME="${DB_NAME:-school_clinic}"
 DB_USER="${DB_USER:-root}"
-DB_HOST="${DB_HOST:-localhost}"
+DB_HOST="${DB_HOST:-127.0.0.1}"
 DB_PORT="${DB_PORT:-3306}"
 SQL_DIR="${SQL_DIR:-./database/mysql}"
 
