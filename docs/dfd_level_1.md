@@ -2,14 +2,14 @@
 ## School Clinic Management System
 
 This document gives you a complete, draw-it-yourself guide for the **Level 1 DFDs** of the system.  
-Use it to decompose each Level 0 process (`1.0` to `7.0`) into smaller subprocesses (`1.1`, `1.2`, etc.).
+Use it to decompose each Level 0 process (`1.0` to `8.0`) into smaller subprocesses (`1.1`, `1.2`, etc.).
 
 ---
 
 ## 1. What “Level 1” means in this project
 
 - **Context Diagram:** one big process (`0`)
-- **Level 0 Diagram:** major processes (`1.0` to `7.0`)
+- **Level 0 Diagram:** major processes (`1.0` to `8.0`)
 - **Level 1 Diagram:** one child diagram per Level 0 process (for example, `2.0` becomes `2.1`–`2.4`)
 
 **Important balancing rule:** every child diagram must keep the same parent inputs/outputs from Level 0.
@@ -52,6 +52,47 @@ Use it to decompose each Level 0 process (`1.0` to `7.0`) into smaller subproces
 ---
 
 ## 4. Level 1 child diagrams to draw
+
+## 4.0 Decomposition of **8.0 Authentication & Portal Access**
+
+### Subprocesses
+
+- `8.1 Receive Login Credentials`
+- `8.2 Validate Account Status`
+- `8.3 Verify Password`
+- `8.4 Create User Session`
+- `8.5 Route User to Portal`
+
+### Parent-balanced flows (must appear)
+
+- `E1 Student -> 8.x : Login Credentials`
+- `E2 Nurse / Clinic Staff -> 8.x : Login Credentials`
+- `E3 Doctor -> 8.x : Login Credentials`
+- `E4 Faculty / Teacher -> 8.x : Login Credentials`
+- `E5 System Admin -> 8.x : Login Credentials`
+- `D1 Users -> 8.x : User Account and Role Data`
+- `8.x -> D1 Users : Last Login Update`
+- `8.x -> E1 Student : Student Session and Portal Access`
+- `8.x -> E2 Nurse / Clinic Staff : Staff Session and Portal Access`
+- `8.x -> E3 Doctor : Doctor Session and Portal Access`
+- `8.x -> E4 Faculty / Teacher : Faculty Session and Portal Access`
+- `8.x -> E5 System Admin : Admin Session and Portal Access`
+- `8.x -> E1 Student / E2 Nurse / E3 Doctor / E4 Faculty / E5 System Admin : Authentication Error`
+
+### Internal flow sequence
+
+- `8.1 -> 8.2 : Credential Lookup Request`
+- `8.2 -> 8.3 : Active User Account`
+- `8.3 -> 8.4 : Verified User Identity`
+- `8.4 -> 8.5 : Session Token and User Role`
+
+### Drawing notes
+
+- Draw all user entities on the left and right edges to show that every role can log in.
+- Keep `D1 Users` close to `8.2` because account status and role data come from the user record.
+- Use one generic error flow for failed login so the diagram does not reveal whether username or password was wrong.
+
+---
 
 ## 4.1 Decomposition of **1.0 Manage Accounts**
 
@@ -323,7 +364,8 @@ Instead of one combined child diagram, draw **four separate Level 1 diagrams** f
 2. Draw **3.0 child diagram** next (core clinical process).
 3. Draw **4.0 + 5.0** (prescription and dispensing).
 4. Draw **6.0** (clearances).
-5. Draw **1.0** and **7.0** last (administration and student view).
+5. Draw **8.0** (authentication and portal access).
+6. Draw **1.0** and **7.0** last (administration and student view).
 
 ---
 

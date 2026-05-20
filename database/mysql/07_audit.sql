@@ -119,6 +119,69 @@ BEGIN
 END //
 
 -- -------------------------------------------------------
+-- clinic.user_session — Audit Triggers
+-- -------------------------------------------------------
+CREATE TRIGGER trg_audit_user_session_insert
+    AFTER INSERT ON user_session
+    FOR EACH ROW
+BEGIN
+    INSERT INTO school_clinic_audit.activity_log
+        (table_schema, table_name, operation, new_data, app_user_id, db_user)
+    VALUES (
+        'school_clinic', 'user_session', 'INSERT',
+        JSON_OBJECT(
+            'session_id', NEW.session_id, 'user_id', NEW.user_id,
+            'session_token_hash', NEW.session_token_hash, 'role', NEW.role,
+            'issued_at', NEW.issued_at, 'expires_at', NEW.expires_at,
+            'revoked_at', NEW.revoked_at, 'last_seen_at', NEW.last_seen_at
+        ),
+        @app_current_user_id, CURRENT_USER()
+    );
+END //
+
+CREATE TRIGGER trg_audit_user_session_update
+    AFTER UPDATE ON user_session
+    FOR EACH ROW
+BEGIN
+    INSERT INTO school_clinic_audit.activity_log
+        (table_schema, table_name, operation, old_data, new_data, app_user_id, db_user)
+    VALUES (
+        'school_clinic', 'user_session', 'UPDATE',
+        JSON_OBJECT(
+            'session_id', OLD.session_id, 'user_id', OLD.user_id,
+            'session_token_hash', OLD.session_token_hash, 'role', OLD.role,
+            'issued_at', OLD.issued_at, 'expires_at', OLD.expires_at,
+            'revoked_at', OLD.revoked_at, 'last_seen_at', OLD.last_seen_at
+        ),
+        JSON_OBJECT(
+            'session_id', NEW.session_id, 'user_id', NEW.user_id,
+            'session_token_hash', NEW.session_token_hash, 'role', NEW.role,
+            'issued_at', NEW.issued_at, 'expires_at', NEW.expires_at,
+            'revoked_at', NEW.revoked_at, 'last_seen_at', NEW.last_seen_at
+        ),
+        @app_current_user_id, CURRENT_USER()
+    );
+END //
+
+CREATE TRIGGER trg_audit_user_session_delete
+    AFTER DELETE ON user_session
+    FOR EACH ROW
+BEGIN
+    INSERT INTO school_clinic_audit.activity_log
+        (table_schema, table_name, operation, old_data, app_user_id, db_user)
+    VALUES (
+        'school_clinic', 'user_session', 'DELETE',
+        JSON_OBJECT(
+            'session_id', OLD.session_id, 'user_id', OLD.user_id,
+            'session_token_hash', OLD.session_token_hash, 'role', OLD.role,
+            'issued_at', OLD.issued_at, 'expires_at', OLD.expires_at,
+            'revoked_at', OLD.revoked_at, 'last_seen_at', OLD.last_seen_at
+        ),
+        @app_current_user_id, CURRENT_USER()
+    );
+END //
+
+-- -------------------------------------------------------
 -- clinic.students — Audit Triggers
 -- -------------------------------------------------------
 CREATE TRIGGER trg_audit_students_insert

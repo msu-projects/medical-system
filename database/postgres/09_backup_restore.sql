@@ -107,6 +107,7 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     SELECT 'clinic.users'::TEXT,                  COUNT(*) FROM clinic.users
+    UNION ALL SELECT 'clinic.user_session',      COUNT(*) FROM clinic.user_session
     UNION ALL SELECT 'clinic.students',           COUNT(*) FROM clinic.students
     UNION ALL SELECT 'clinic.qr_codes',           COUNT(*) FROM clinic.qr_codes
     UNION ALL SELECT 'clinic.consultations',      COUNT(*) FROM clinic.consultations

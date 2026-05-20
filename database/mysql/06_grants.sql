@@ -57,6 +57,7 @@ GRANT EXECUTE ON PROCEDURE school_clinic.secure_update_clearance TO
 -- STEP 4: Table-level grants — clinic_doctor
 -- ============================================================================
 GRANT SELECT ON school_clinic.users TO 'clinic_doctor';
+GRANT SELECT ON school_clinic.user_session TO 'clinic_doctor';
 GRANT SELECT ON school_clinic.students TO 'clinic_doctor';
 GRANT SELECT, UPDATE ON school_clinic.consultations TO 'clinic_doctor';
 GRANT SELECT, INSERT, UPDATE ON school_clinic.prescriptions TO 'clinic_doctor';
@@ -68,6 +69,7 @@ GRANT SELECT, INSERT, UPDATE ON school_clinic.health_clearances TO 'clinic_docto
 -- STEP 5: Table-level grants — clinic_nurse
 -- ============================================================================
 GRANT SELECT ON school_clinic.users TO 'clinic_nurse';
+GRANT SELECT ON school_clinic.user_session TO 'clinic_nurse';
 GRANT SELECT, INSERT, UPDATE ON school_clinic.students TO 'clinic_nurse';
 GRANT SELECT ON school_clinic.qr_codes TO 'clinic_nurse';
 GRANT SELECT, INSERT, UPDATE ON school_clinic.consultations TO 'clinic_nurse';
@@ -82,6 +84,7 @@ GRANT SELECT, INSERT, UPDATE ON school_clinic.health_clearances TO 'clinic_nurse
 -- Parity with PostgreSQL intent: table SELECT is allowed, row filtering is
 -- enforced by role-aware views/procedures and session context.
 GRANT SELECT ON school_clinic.users TO 'clinic_student';
+GRANT SELECT ON school_clinic.user_session TO 'clinic_student';
 GRANT SELECT ON school_clinic.students TO 'clinic_student';
 GRANT SELECT ON school_clinic.qr_codes TO 'clinic_student';
 GRANT SELECT ON school_clinic.consultations TO 'clinic_student';
@@ -94,6 +97,7 @@ GRANT SELECT ON school_clinic.medicines TO 'clinic_student';
 -- STEP 7: Table-level grants — clinic_faculty
 -- ============================================================================
 GRANT SELECT ON school_clinic.users TO 'clinic_faculty';
+GRANT SELECT ON school_clinic.user_session TO 'clinic_faculty';
 GRANT SELECT, INSERT ON school_clinic.health_clearances TO 'clinic_faculty';
 
 -- ============================================================================

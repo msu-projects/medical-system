@@ -70,6 +70,7 @@ GRANT SELECT ON clinic.students TO clinic_rls_owner;
 -- FORCE ensures even table owners are subject to RLS during normal queries.
 
 ALTER TABLE clinic.users                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clinic.user_session        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clinic.students             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clinic.consultations        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clinic.prescriptions        ENABLE ROW LEVEL SECURITY;
@@ -79,6 +80,7 @@ ALTER TABLE clinic.qr_codes            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clinic.medicines            ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE clinic.users                FORCE ROW LEVEL SECURITY;
+ALTER TABLE clinic.user_session        FORCE ROW LEVEL SECURITY;
 ALTER TABLE clinic.students             FORCE ROW LEVEL SECURITY;
 ALTER TABLE clinic.consultations        FORCE ROW LEVEL SECURITY;
 ALTER TABLE clinic.prescriptions        FORCE ROW LEVEL SECURITY;
@@ -143,6 +145,23 @@ CREATE POLICY student_related_staff_user ON clinic.users
 CREATE POLICY faculty_own_user ON clinic.users
     FOR SELECT
     TO clinic_faculty
+    USING (user_id = clinic.current_app_user_id());
+
+-- ============================================================================
+-- POLICIES: clinic.user_session
+-- ============================================================================
+
+-- Admin: full access to all session records
+CREATE POLICY admin_all_user_session ON clinic.user_session
+    FOR ALL
+    TO clinic_admin
+    USING (true)
+    WITH CHECK (true);
+
+-- Users: can see only their own session records
+CREATE POLICY users_own_user_session ON clinic.user_session
+    FOR SELECT
+    TO clinic_doctor, clinic_nurse, clinic_student, clinic_faculty
     USING (user_id = clinic.current_app_user_id());
 
 -- ============================================================================

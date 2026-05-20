@@ -112,6 +112,7 @@ SQL SECURITY DEFINER
 COMMENT 'Returns record counts for all tables — use before/after backup to verify completeness.'
 BEGIN
     SELECT 'school_clinic.users'                AS table_name, COUNT(*) AS record_count FROM school_clinic.users
+    UNION ALL SELECT 'school_clinic.user_session',        COUNT(*) FROM school_clinic.user_session
     UNION ALL SELECT 'school_clinic.students',           COUNT(*) FROM school_clinic.students
     UNION ALL SELECT 'school_clinic.qr_codes',           COUNT(*) FROM school_clinic.qr_codes
     UNION ALL SELECT 'school_clinic.consultations',      COUNT(*) FROM school_clinic.consultations

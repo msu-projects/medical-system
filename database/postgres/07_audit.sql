@@ -151,6 +151,12 @@ CREATE TRIGGER trg_audit_users
     AFTER INSERT OR UPDATE OR DELETE ON clinic.users
     FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
 
+-- clinic.user_session
+DROP TRIGGER IF EXISTS trg_audit_user_session ON clinic.user_session;
+CREATE TRIGGER trg_audit_user_session
+    AFTER INSERT OR UPDATE OR DELETE ON clinic.user_session
+    FOR EACH ROW EXECUTE FUNCTION audit.fn_audit_trigger();
+
 -- clinic.students
 DROP TRIGGER IF EXISTS trg_audit_students ON clinic.students;
 CREATE TRIGGER trg_audit_students

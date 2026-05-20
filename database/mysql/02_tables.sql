@@ -32,7 +32,32 @@ CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 2. Students — Extended Student Profile
+-- 2. User Session — Authentication Session Tracking
+-- --------------------------------------------------------
+-- Stores hashed session tokens only. Raw tokens/JWTs must never be persisted.
+
+CREATE TABLE user_session (
+    session_id         BIGINT       AUTO_INCREMENT PRIMARY KEY,
+    user_id            INT          NOT NULL,
+    session_token_hash CHAR(64)     NOT NULL UNIQUE,
+    role               VARCHAR(20)  NOT NULL
+                                  CHECK (role IN ('admin', 'nurse', 'doctor', 'student', 'faculty')),
+    issued_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at         TIMESTAMP    NOT NULL,
+    revoked_at         TIMESTAMP    NULL DEFAULT NULL,
+    last_seen_at       TIMESTAMP    NULL DEFAULT NULL,
+    ip_address         VARCHAR(45)  DEFAULT NULL,
+    user_agent         VARCHAR(255) DEFAULT NULL,
+    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_session_user_id    (user_id),
+    INDEX idx_user_session_expires_at (expires_at),
+    INDEX idx_user_session_revoked_at (revoked_at),
+    CONSTRAINT fk_user_session_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- 3. Students — Extended Student Profile
 -- --------------------------------------------------------
 -- One-to-one with users (only users with role='student').
 -- Contains demographic and medical baseline data.
@@ -60,7 +85,7 @@ CREATE TABLE students (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 3. QR Codes — Unique Scannable Tokens per Student
+-- 4. QR Codes — Unique Scannable Tokens per Student
 -- --------------------------------------------------------
 -- Each student gets a UUID-based QR token for fast clinic check-in.
 -- The QR code image encodes this UUID — never the student_number.
@@ -75,7 +100,7 @@ CREATE TABLE qr_codes (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 4. Consultations — Core Medical Records
+-- 5. Consultations — Core Medical Records
 -- --------------------------------------------------------
 -- Each visit to the clinic creates a consultation record.
 -- SECURITY: diagnosis and treatment_notes are AES-256 encrypted at rest.
@@ -107,7 +132,7 @@ CREATE TABLE consultations (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 5. Prescriptions — Doctor-Issued Medication Orders
+-- 6. Prescriptions — Doctor-Issued Medication Orders
 -- --------------------------------------------------------
 -- Only doctors can create prescriptions.
 -- SECURITY: prescription_details and notes are AES-256 encrypted.
@@ -127,7 +152,7 @@ CREATE TABLE prescriptions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 6. Medicines — Basic Medicine Catalog
+-- 7. Medicines — Basic Medicine Catalog
 -- --------------------------------------------------------
 
 CREATE TABLE medicines (
@@ -141,7 +166,7 @@ CREATE TABLE medicines (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 7. Consultation Medicines — What Was Dispensed
+-- 8. Consultation Medicines — What Was Dispensed
 -- --------------------------------------------------------
 -- Tracks medicines given to a student during a consultation.
 
@@ -161,7 +186,7 @@ CREATE TABLE consultation_medicines (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 8. Health Clearances — Medical Certificates & Clearance Status
+-- 9. Health Clearances — Medical Certificates & Clearance Status
 -- --------------------------------------------------------
 
 CREATE TABLE health_clearances (
@@ -188,7 +213,7 @@ CREATE TABLE health_clearances (
 -- ============================================================================
 
 -- --------------------------------------------------------
--- 9. Student Number Counter — Auto-Generation Support
+-- 10. Student Number Counter — Auto-Generation Support
 -- --------------------------------------------------------
 -- Tracks the last issued student-number suffix per enrollment year.
 -- Used by trg_students_before_insert to auto-assign YYYY-NNNN numbers.
@@ -202,7 +227,7 @@ CREATE TABLE student_number_counters (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 10. Business Logic Triggers
+-- 11. Business Logic Triggers
 -- --------------------------------------------------------
 -- Mirrors PostgreSQL's fn_assign_student_number and fn_enforce_user_role.
 
@@ -429,6 +454,7 @@ DELIMITER ;
 -- ============================================================================
 -- SHOW TABLES;
 -- DESCRIBE users;       -- first_name, last_name (no full_name)
+-- DESCRIBE user_session;
 -- DESCRIBE students;    -- year_of_enrollment, no first_name/last_name
 -- DESCRIBE qr_codes;    -- qr_token is the PRIMARY KEY
 -- SHOW TRIGGERS;

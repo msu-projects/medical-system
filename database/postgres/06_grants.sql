@@ -96,6 +96,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA clinic TO clinic_admin;
 -- ============================================================================
 
 GRANT SELECT                ON clinic.users                  TO clinic_doctor;
+GRANT SELECT                ON clinic.user_session          TO clinic_doctor;
 GRANT SELECT                ON clinic.students               TO clinic_doctor;
 GRANT SELECT, UPDATE        ON clinic.consultations          TO clinic_doctor;
 GRANT SELECT, INSERT, UPDATE ON clinic.prescriptions         TO clinic_doctor;
@@ -109,6 +110,7 @@ GRANT SELECT, INSERT, UPDATE ON clinic.health_clearances    TO clinic_doctor;
 -- ============================================================================
 
 GRANT SELECT                ON clinic.users                  TO clinic_nurse;
+GRANT SELECT                ON clinic.user_session          TO clinic_nurse;
 GRANT SELECT, INSERT, UPDATE ON clinic.students              TO clinic_nurse;
 GRANT SELECT                ON clinic.qr_codes               TO clinic_nurse;
 GRANT SELECT, INSERT, UPDATE ON clinic.consultations         TO clinic_nurse;
@@ -125,6 +127,7 @@ GRANT SELECT, INSERT, UPDATE ON clinic.health_clearances    TO clinic_nurse;
 -- are filtered by RLS so students only see their own data.
 
 GRANT SELECT ON clinic.users                  TO clinic_student;
+GRANT SELECT ON clinic.user_session          TO clinic_student;
 GRANT SELECT ON clinic.students               TO clinic_student;
 GRANT SELECT ON clinic.qr_codes              TO clinic_student;
 GRANT SELECT ON clinic.consultations          TO clinic_student;
@@ -140,6 +143,7 @@ GRANT SELECT ON clinic.medicines              TO clinic_student;
 -- They can also INSERT clearance requests.
 
 GRANT SELECT ON clinic.users             TO clinic_faculty;
+GRANT SELECT ON clinic.user_session     TO clinic_faculty;
 GRANT SELECT, INSERT ON clinic.health_clearances TO clinic_faculty;
 
 -- ============================================================================
