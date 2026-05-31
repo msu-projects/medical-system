@@ -16,7 +16,7 @@ SET search_path TO clinic, public;
 -- Workflow Views
 -- ============================================================================
 
-CREATE OR REPLACE VIEW clinic.v_dfd_account_details
+CREATE OR REPLACE VIEW clinic.v_account_details
 WITH (security_invoker = true) AS
 SELECT
     u.user_id,
@@ -48,7 +48,7 @@ FROM clinic.users u
 LEFT JOIN clinic.students s ON s.user_id = u.user_id
 LEFT JOIN clinic.qr_codes q ON q.student_number = s.student_number;
 
-CREATE OR REPLACE VIEW clinic.v_dfd_qr_checkin_context
+CREATE OR REPLACE VIEW clinic.v_qr_checkin_context
 WITH (security_invoker = true) AS
 SELECT
     q.qr_token,
@@ -71,7 +71,7 @@ JOIN clinic.users u ON u.user_id = s.user_id
 WHERE q.is_active = TRUE
   AND u.is_active = TRUE;
 
-CREATE OR REPLACE VIEW clinic.v_dfd_consultation_context
+CREATE OR REPLACE VIEW clinic.v_consultation_context
 WITH (security_invoker = true) AS
 SELECT
     c.consultation_id,
@@ -96,7 +96,7 @@ JOIN clinic.students s ON s.student_number = c.student_number
 JOIN clinic.users su ON su.user_id = s.user_id
 JOIN clinic.users au ON au.user_id = c.attended_by;
 
-CREATE OR REPLACE VIEW clinic.v_dfd_prescription_context
+CREATE OR REPLACE VIEW clinic.v_prescription_context
 WITH (security_invoker = true) AS
 SELECT
     p.prescription_id,
@@ -114,7 +114,7 @@ JOIN clinic.students s ON s.student_number = c.student_number
 JOIN clinic.users su ON su.user_id = s.user_id
 JOIN clinic.users du ON du.user_id = p.prescribed_by;
 
-CREATE OR REPLACE VIEW clinic.v_dfd_dispense_context
+CREATE OR REPLACE VIEW clinic.v_dispense_context
 WITH (security_invoker = true) AS
 SELECT
     cm.id AS dispense_id,
@@ -133,7 +133,7 @@ JOIN clinic.consultations c ON c.consultation_id = cm.consultation_id
 JOIN clinic.medicines m ON m.medicine_id = cm.medicine_id
 LEFT JOIN clinic.users u ON u.user_id = cm.dispensed_by;
 
-CREATE OR REPLACE VIEW clinic.v_dfd_clearance_context
+CREATE OR REPLACE VIEW clinic.v_clearance_context
 WITH (security_invoker = true) AS
 SELECT
     hc.clearance_id,
@@ -157,7 +157,7 @@ JOIN clinic.users su ON su.user_id = s.user_id
 LEFT JOIN clinic.users fu ON fu.user_id = hc.requested_by
 LEFT JOIN clinic.users iu ON iu.user_id = hc.issued_by;
 
-CREATE OR REPLACE VIEW clinic.v_dfd_active_sessions
+CREATE OR REPLACE VIEW clinic.v_active_sessions
 WITH (security_invoker = true) AS
 SELECT
     s.session_id,
@@ -180,7 +180,7 @@ WHERE s.revoked_at IS NULL
 -- 1.0 Manage Accounts
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_add_account(
+CREATE OR REPLACE FUNCTION clinic.add_account(
     p_username VARCHAR(50),
     p_password_hash VARCHAR(255),
     p_email VARCHAR(100),
@@ -240,7 +240,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION clinic.dfd_update_account(
+CREATE OR REPLACE FUNCTION clinic.update_account(
     p_user_id INT,
     p_email VARCHAR(100) DEFAULT NULL,
     p_first_name VARCHAR(100) DEFAULT NULL,
@@ -305,7 +305,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION clinic.dfd_deactivate_account(p_user_id INT)
+CREATE OR REPLACE FUNCTION clinic.deactivate_account(p_user_id INT)
 RETURNS TABLE (user_id INT, student_number VARCHAR(10), result TEXT)
 LANGUAGE plpgsql
 VOLATILE
@@ -346,15 +346,15 @@ $$;
 -- 2.0 Check In Student (QR)
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_check_in_qr(p_qr_token UUID)
-RETURNS SETOF clinic.v_dfd_qr_checkin_context
+CREATE OR REPLACE FUNCTION clinic.check_in_qr(p_qr_token UUID)
+RETURNS SETOF clinic.v_qr_checkin_context
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = clinic, public
 AS $$
     SELECT *
-    FROM clinic.v_dfd_qr_checkin_context
+    FROM clinic.v_qr_checkin_context
     WHERE qr_token = p_qr_token;
 $$;
 
@@ -362,7 +362,7 @@ $$;
 -- 3.0 Record Consultation
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_save_consultation(
+CREATE OR REPLACE FUNCTION clinic.save_consultation(
     p_consultation_id INT DEFAULT NULL,
     p_student_number VARCHAR(10) DEFAULT NULL,
     p_attended_by INT DEFAULT NULL,
@@ -426,7 +426,7 @@ $$;
 -- 4.0 Issue Prescription
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_issue_prescription(
+CREATE OR REPLACE FUNCTION clinic.issue_prescription(
     p_consultation_id INT,
     p_prescribed_by INT,
     p_prescription_details TEXT,
@@ -458,7 +458,7 @@ $$;
 -- 5.0 Dispense Medicine
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_dispense_medicine(
+CREATE OR REPLACE FUNCTION clinic.dispense_medicine(
     p_consultation_id INT,
     p_medicine_id INT,
     p_quantity_given INT,
@@ -511,7 +511,7 @@ $$;
 -- 6.0 Manage Health Clearance
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_request_clearance(
+CREATE OR REPLACE FUNCTION clinic.request_clearance(
     p_student_number VARCHAR(10),
     p_requested_by INT,
     p_purpose VARCHAR(100) DEFAULT NULL
@@ -533,7 +533,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION clinic.dfd_decide_clearance(
+CREATE OR REPLACE FUNCTION clinic.decide_clearance(
     p_clearance_id INT,
     p_issued_by INT,
     p_status VARCHAR(20),
@@ -570,7 +570,7 @@ $$;
 -- 7.0 View Medical History
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_student_medical_history(p_student_user_id INT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION clinic.student_medical_history(p_student_user_id INT DEFAULT NULL)
 RETURNS SETOF clinic.v_student_medical_history
 LANGUAGE sql
 STABLE
@@ -587,7 +587,7 @@ $$;
 -- 8.0 Authentication & Portal Access
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.dfd_route_user_portal(p_session_token_hash CHAR(64))
+CREATE OR REPLACE FUNCTION clinic.route_user_portal(p_session_token_hash CHAR(64))
 RETURNS TABLE (
     user_id INT,
     username VARCHAR(50),
@@ -621,32 +621,32 @@ END;
 $$;
 
 GRANT SELECT ON
-    clinic.v_dfd_account_details,
-    clinic.v_dfd_qr_checkin_context,
-    clinic.v_dfd_consultation_context,
-    clinic.v_dfd_prescription_context,
-    clinic.v_dfd_dispense_context,
-    clinic.v_dfd_clearance_context,
-    clinic.v_dfd_active_sessions
+    clinic.v_account_details,
+    clinic.v_qr_checkin_context,
+    clinic.v_consultation_context,
+    clinic.v_prescription_context,
+    clinic.v_dispense_context,
+    clinic.v_clearance_context,
+    clinic.v_active_sessions
 TO clinic_app;
 
-GRANT EXECUTE ON FUNCTION clinic.dfd_add_account(
+GRANT EXECUTE ON FUNCTION clinic.add_account(
     VARCHAR(50), VARCHAR(255), VARCHAR(100), VARCHAR(100), VARCHAR(100), VARCHAR(20),
     VARCHAR(10), SMALLINT, DATE, VARCHAR(10), VARCHAR(20), VARCHAR(100), VARCHAR(20),
     VARCHAR(20), VARCHAR(20), VARCHAR(5), TEXT
 ) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_update_account(
+GRANT EXECUTE ON FUNCTION clinic.update_account(
     INT, VARCHAR(100), VARCHAR(100), VARCHAR(100), BOOLEAN, DATE, VARCHAR(10), VARCHAR(20),
     VARCHAR(100), VARCHAR(20), VARCHAR(20), VARCHAR(20), VARCHAR(5), TEXT, BOOLEAN
 ) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_deactivate_account(INT) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_check_in_qr(UUID) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_save_consultation(
+GRANT EXECUTE ON FUNCTION clinic.deactivate_account(INT) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.check_in_qr(UUID) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.save_consultation(
     INT, VARCHAR(10), INT, TEXT, TEXT, TEXT, VARCHAR(10), NUMERIC, INT, NUMERIC, VARCHAR(20)
 ) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_issue_prescription(INT, INT, TEXT, TEXT) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_dispense_medicine(INT, INT, INT, INT) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_request_clearance(VARCHAR(10), INT, VARCHAR(100)) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_decide_clearance(INT, INT, VARCHAR(20), TEXT, DATE) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_student_medical_history(INT) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.dfd_route_user_portal(CHAR(64)) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.issue_prescription(INT, INT, TEXT, TEXT) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.dispense_medicine(INT, INT, INT, INT) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.request_clearance(VARCHAR(10), INT, VARCHAR(100)) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.decide_clearance(INT, INT, VARCHAR(20), TEXT, DATE) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.student_medical_history(INT) TO clinic_app;
+GRANT EXECUTE ON FUNCTION clinic.route_user_portal(CHAR(64)) TO clinic_app;

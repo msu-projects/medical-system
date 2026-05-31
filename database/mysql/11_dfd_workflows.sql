@@ -19,7 +19,7 @@ USE school_clinic;
 CREATE OR REPLACE
 DEFINER = 'root'@'localhost'
 SQL SECURITY DEFINER
-VIEW v_dfd_account_details AS
+VIEW v_account_details AS
 SELECT
     u.user_id,
     u.username,
@@ -53,7 +53,7 @@ LEFT JOIN qr_codes q ON q.student_number = s.student_number;
 CREATE OR REPLACE
 DEFINER = 'root'@'localhost'
 SQL SECURITY DEFINER
-VIEW v_dfd_qr_checkin_context AS
+VIEW v_qr_checkin_context AS
 SELECT
     q.qr_token,
     q.is_active AS qr_active,
@@ -78,7 +78,7 @@ WHERE q.is_active = TRUE
 CREATE OR REPLACE
 DEFINER = 'root'@'localhost'
 SQL SECURITY DEFINER
-VIEW v_dfd_consultation_context AS
+VIEW v_consultation_context AS
 SELECT
     c.consultation_id,
     c.student_number,
@@ -105,7 +105,7 @@ JOIN users au ON au.user_id = c.attended_by;
 CREATE OR REPLACE
 DEFINER = 'root'@'localhost'
 SQL SECURITY DEFINER
-VIEW v_dfd_prescription_context AS
+VIEW v_prescription_context AS
 SELECT
     p.prescription_id,
     p.consultation_id,
@@ -125,7 +125,7 @@ JOIN users du ON du.user_id = p.prescribed_by;
 CREATE OR REPLACE
 DEFINER = 'root'@'localhost'
 SQL SECURITY DEFINER
-VIEW v_dfd_dispense_context AS
+VIEW v_dispense_context AS
 SELECT
     cm.id AS dispense_id,
     cm.consultation_id,
@@ -146,7 +146,7 @@ LEFT JOIN users u ON u.user_id = cm.dispensed_by;
 CREATE OR REPLACE
 DEFINER = 'root'@'localhost'
 SQL SECURITY DEFINER
-VIEW v_dfd_clearance_context AS
+VIEW v_clearance_context AS
 SELECT
     hc.clearance_id,
     hc.student_number,
@@ -172,7 +172,7 @@ LEFT JOIN users iu ON iu.user_id = hc.issued_by;
 CREATE OR REPLACE
 DEFINER = 'root'@'localhost'
 SQL SECURITY DEFINER
-VIEW v_dfd_active_sessions AS
+VIEW v_active_sessions AS
 SELECT
     s.session_id,
     s.user_id,
@@ -196,8 +196,8 @@ DELIMITER //
 -- 1.0 Manage Accounts
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_add_account //
-CREATE PROCEDURE dfd_add_account(
+DROP PROCEDURE IF EXISTS add_account //
+CREATE PROCEDURE add_account(
     IN p_username VARCHAR(50),
     IN p_password_hash VARCHAR(255),
     IN p_email VARCHAR(100),
@@ -273,8 +273,8 @@ BEGIN
            'account_created' AS result;
 END //
 
-DROP PROCEDURE IF EXISTS dfd_update_account //
-CREATE PROCEDURE dfd_update_account(
+DROP PROCEDURE IF EXISTS update_account //
+CREATE PROCEDURE update_account(
     IN p_user_id INT,
     IN p_email VARCHAR(100),
     IN p_first_name VARCHAR(100),
@@ -337,8 +337,8 @@ BEGIN
            'account_updated' AS result;
 END //
 
-DROP PROCEDURE IF EXISTS dfd_deactivate_account //
-CREATE PROCEDURE dfd_deactivate_account(IN p_user_id INT)
+DROP PROCEDURE IF EXISTS deactivate_account //
+CREATE PROCEDURE deactivate_account(IN p_user_id INT)
 SQL SECURITY DEFINER
 BEGIN
     DECLARE v_student_number VARCHAR(10);
@@ -377,12 +377,12 @@ END //
 -- 2.0 Check In Student (QR)
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_check_in_qr //
-CREATE PROCEDURE dfd_check_in_qr(IN p_qr_token CHAR(36))
+DROP PROCEDURE IF EXISTS check_in_qr //
+CREATE PROCEDURE check_in_qr(IN p_qr_token CHAR(36))
 SQL SECURITY DEFINER
 BEGIN
     SELECT *
-    FROM v_dfd_qr_checkin_context
+    FROM v_qr_checkin_context
     WHERE qr_token = p_qr_token;
 END //
 
@@ -390,8 +390,8 @@ END //
 -- 3.0 Record Consultation
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_save_consultation //
-CREATE PROCEDURE dfd_save_consultation(
+DROP PROCEDURE IF EXISTS save_consultation //
+CREATE PROCEDURE save_consultation(
     IN p_consultation_id INT,
     IN p_student_number VARCHAR(10),
     IN p_attended_by INT,
@@ -456,8 +456,8 @@ END //
 -- 4.0 Issue Prescription
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_issue_prescription //
-CREATE PROCEDURE dfd_issue_prescription(
+DROP PROCEDURE IF EXISTS issue_prescription //
+CREATE PROCEDURE issue_prescription(
     IN p_consultation_id INT,
     IN p_prescribed_by INT,
     IN p_prescription_details TEXT,
@@ -485,8 +485,8 @@ END //
 -- 5.0 Dispense Medicine
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_dispense_medicine //
-CREATE PROCEDURE dfd_dispense_medicine(
+DROP PROCEDURE IF EXISTS dispense_medicine //
+CREATE PROCEDURE dispense_medicine(
     IN p_consultation_id INT,
     IN p_medicine_id INT,
     IN p_quantity_given INT,
@@ -551,8 +551,8 @@ END //
 -- 6.0 Manage Health Clearance
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_request_clearance //
-CREATE PROCEDURE dfd_request_clearance(
+DROP PROCEDURE IF EXISTS request_clearance //
+CREATE PROCEDURE request_clearance(
     IN p_student_number VARCHAR(10),
     IN p_requested_by INT,
     IN p_purpose VARCHAR(100)
@@ -565,8 +565,8 @@ BEGIN
     SELECT LAST_INSERT_ID() AS clearance_id;
 END //
 
-DROP PROCEDURE IF EXISTS dfd_decide_clearance //
-CREATE PROCEDURE dfd_decide_clearance(
+DROP PROCEDURE IF EXISTS decide_clearance //
+CREATE PROCEDURE decide_clearance(
     IN p_clearance_id INT,
     IN p_issued_by INT,
     IN p_status VARCHAR(20),
@@ -601,8 +601,8 @@ END //
 -- 7.0 View Medical History
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_student_medical_history //
-CREATE PROCEDURE dfd_student_medical_history()
+DROP PROCEDURE IF EXISTS student_medical_history //
+CREATE PROCEDURE student_medical_history()
 SQL SECURITY DEFINER
 BEGIN
     SELECT *
@@ -613,8 +613,8 @@ END //
 -- 8.0 Authentication & Portal Access
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS dfd_route_user_portal //
-CREATE PROCEDURE dfd_route_user_portal(IN p_session_token_hash CHAR(64))
+DROP PROCEDURE IF EXISTS route_user_portal //
+CREATE PROCEDURE route_user_portal(IN p_session_token_hash CHAR(64))
 SQL SECURITY DEFINER
 BEGIN
     DECLARE v_user_id INT;
@@ -665,22 +665,22 @@ END //
 
 DELIMITER ;
 
-GRANT SELECT ON school_clinic.v_dfd_account_details TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic.v_dfd_qr_checkin_context TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic.v_dfd_consultation_context TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic.v_dfd_prescription_context TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic.v_dfd_dispense_context TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic.v_dfd_clearance_context TO 'clinic_app'@'%';
-GRANT SELECT ON school_clinic.v_dfd_active_sessions TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic.v_account_details TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic.v_qr_checkin_context TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic.v_consultation_context TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic.v_prescription_context TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic.v_dispense_context TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic.v_clearance_context TO 'clinic_app'@'%';
+GRANT SELECT ON school_clinic.v_active_sessions TO 'clinic_app'@'%';
 
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_add_account TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_update_account TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_deactivate_account TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_check_in_qr TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_save_consultation TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_issue_prescription TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_dispense_medicine TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_request_clearance TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_decide_clearance TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_student_medical_history TO 'clinic_app'@'%';
-GRANT EXECUTE ON PROCEDURE school_clinic.dfd_route_user_portal TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.add_account TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.update_account TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.deactivate_account TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.check_in_qr TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.save_consultation TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.issue_prescription TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.dispense_medicine TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.request_clearance TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.decide_clearance TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.student_medical_history TO 'clinic_app'@'%';
+GRANT EXECUTE ON PROCEDURE school_clinic.route_user_portal TO 'clinic_app'@'%';
