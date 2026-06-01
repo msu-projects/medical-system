@@ -17,6 +17,7 @@ Run scripts in order, then seed demo data:
 -- mysql -u root -p school_clinic < database/mysql/07_audit.sql
 -- mysql -u root -p school_clinic < database/mysql/08_seed.sql
 -- mysql -u root -p school_clinic < database/mysql/10_auth_helpers.sql
+-- mysql -u root -p school_clinic < database/mysql/11_dfd_workflows.sql
 ```
 
 Demo password for seeded users: `password123`.
@@ -25,11 +26,12 @@ Common users: `admin`, `nurse.garcia`, `nurse.cruz`, `dr.santos`, `dr.reyes`, `p
 
 ```sql
 USE school_clinic;
+SET @app_encryption_key = 'dev-secret-key-change-in-prod';
 ```
 
 ## 8.0 Authentication & Portal Access
 
-App gets login data, verifies bcrypt password, creates session, then uses hashed token per request.
+App gets login data, verifies bcrypt password, creates session, then routes the user to the correct portal from the hashed session token.
 
 ```sql
 -- 8.1-8.3: lookup active account. App verifies password_hash with bcrypt.
@@ -45,8 +47,11 @@ CALL auth_create_session(
 );
 
 -- 8.5: restore request context from session token hash.
-CALL auth_touch_session(REPEAT('a', 64));
+CALL route_user_portal(REPEAT('a', 64));
 SELECT current_app_user_id(), current_app_role();
+
+-- Active session dashboard context.
+SELECT * FROM v_active_sessions;
 
 -- Logout.
 CALL auth_revoke_session(REPEAT('a', 64));
@@ -54,39 +59,58 @@ CALL auth_revoke_session(REPEAT('a', 64));
 
 ## 1.0 Manage Accounts
 
-Admin creates, reads, updates, and deactivates accounts.
+Admin creates, reads, updates, and deactivates accounts through DFD workflow helpers.
 
 ```sql
 SET @app_current_user_id = 1;
 SET @app_current_role = 'admin';
 
 -- Add student account.
-INSERT INTO users (username, password_hash, email, first_name, last_name, role)
-VALUES ('luna.student', '$2b$12$demo.hash.replace.in.app', 'luna@student.school.edu', 'Luna', 'Santos', 'student');
-
-SET @new_user_id = LAST_INSERT_ID();
-
-INSERT INTO students (
-  user_id, year_of_enrollment, date_of_birth, sex, contact_number,
-  emergency_contact_name, emergency_contact_number, year_level, section, blood_type, allergies
-)
-VALUES (@new_user_id, 2024, '2010-09-09', 'Female', '09170000009',
-        'Rosa Santos', '09180000009', 'Grade 8', 'Section F', 'O+', 'None');
-
-SET @new_student_number = (SELECT student_number FROM students WHERE user_id = @new_user_id);
-INSERT INTO qr_codes (student_number) VALUES (@new_student_number);
+CALL add_account(
+  'luna.student',
+  '$2b$12$demo.hash.replace.in.app',
+  'luna@student.school.edu',
+  'Luna',
+  'Santos',
+  'student',
+  NULL,
+  2024,
+  '2010-09-09',
+  'Female',
+  '09170000009',
+  'Rosa Santos',
+  '09180000009',
+  'Grade 8',
+  'Section F',
+  'O+',
+  'None'
+);
 
 -- Read account with student and QR data.
-SELECT * FROM v_admin_user_overview WHERE username = 'luna.student';
-SELECT * FROM qr_codes WHERE student_number = @new_student_number;
+SELECT * FROM v_account_details WHERE username = 'luna.student';
 
 -- Update account and student profile.
-UPDATE users SET email = 'luna.santos@student.school.edu' WHERE username = 'luna.student';
-UPDATE students SET contact_number = '09171112222', allergies = 'Peanuts' WHERE user_id = @new_user_id;
+SET @new_user_id = (SELECT user_id FROM users WHERE username = 'luna.student');
+CALL update_account(
+  @new_user_id,
+  'luna.santos@student.school.edu',
+  NULL,
+  NULL,
+  TRUE,
+  NULL,
+  NULL,
+  '09171112222',
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  'Peanuts',
+  TRUE
+);
 
 -- Deactivate account and QR token.
-UPDATE users SET is_active = FALSE WHERE username = 'luna.student';
-UPDATE qr_codes SET is_active = FALSE WHERE student_number = @new_student_number;
+CALL deactivate_account(@new_user_id);
 ```
 
 ## 2.0 Check In Student (QR)
@@ -101,9 +125,7 @@ SET @app_current_role = 'nurse';
 SELECT qr_token FROM qr_codes WHERE student_number = '2024-0001' AND is_active = TRUE;
 
 -- Simulate scanned QR lookup.
-SELECT *
-FROM v_qr_checkin
-WHERE qr_token = (SELECT qr_token FROM qr_codes WHERE student_number = '2024-0001' LIMIT 1);
+CALL check_in_qr((SELECT qr_token FROM qr_codes WHERE student_number = '2024-0001' LIMIT 1));
 ```
 
 ## 3.0 Record Consultation
@@ -161,7 +183,7 @@ SELECT @prescription_id AS prescription_id;
 
 ## 5.0 Dispense Medicine
 
-Nurse checks catalog, records dispensing, and updates stock.
+Nurse checks catalog, records dispensing, and updates stock in one workflow call.
 
 ```sql
 SET @app_current_user_id = 4;
@@ -174,28 +196,24 @@ WHERE available_quantity > 0
 ORDER BY name;
 
 -- Dispense Paracetamol for consultation 1.
-INSERT INTO consultation_medicines (consultation_id, medicine_id, quantity_given, dispensed_by)
-VALUES (1, 1, 2, 4);
+CALL dispense_medicine(1, 1, 2, 4);
 
-UPDATE medicines
-SET available_quantity = available_quantity - 2
-WHERE medicine_id = 1 AND available_quantity >= 2;
+SELECT * FROM v_dispense_context WHERE consultation_id = 1;
 ```
 
 ## 6.0 Manage Health Clearance
 
-Faculty requests clearance; doctor or nurse records decision.
+Faculty requests clearance; doctor or nurse records decision through workflow helpers.
 
 ```sql
 SET @app_current_user_id = 11;
 SET @app_current_role = 'faculty';
 
 -- Faculty request.
-INSERT INTO health_clearances (student_number, purpose, requested_by)
-VALUES ('2024-0002', 'Science fair travel — May 2026', 11);
+CALL request_clearance('2024-0002', 11, 'Science fair travel - May 2026');
 
 SET @clearance_id = LAST_INSERT_ID();
-SELECT clearance_id, status FROM health_clearances WHERE clearance_id = @clearance_id;
+SELECT * FROM v_clearance_context WHERE clearance_id = @clearance_id;
 
 SET @app_current_user_id = 2;
 SET @app_current_role = 'doctor';
@@ -204,9 +222,7 @@ SET @app_current_role = 'doctor';
 SELECT * FROM v_doctor_consultations WHERE student_number = '2024-0002';
 
 -- Doctor clears request.
-UPDATE health_clearances
-SET status = 'cleared', issued_by = 2, valid_until = '2026-05-31', remarks = 'Fit for participation'
-WHERE clearance_id = @clearance_id;
+CALL decide_clearance(@clearance_id, 2, 'cleared', 'Fit for participation', '2026-05-31');
 ```
 
 ## 7.0 View Medical History
@@ -217,10 +233,7 @@ Student logs in and sees own consultations, prescriptions, and dispensed medicin
 SET @app_current_user_id = 6; -- Juan Dela Cruz
 SET @app_current_role = 'student';
 
-SELECT consultation_id, check_in_time, chief_complaint, diagnosis,
-       prescription_details, medicine_name, quantity_given
-FROM v_student_medical_history
-ORDER BY check_in_time DESC;
+CALL student_medical_history();
 ```
 
 ## Quick Verification

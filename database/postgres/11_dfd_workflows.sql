@@ -358,101 +358,7 @@ AS $$
     WHERE qr_token = p_qr_token;
 $$;
 
--- ============================================================================
--- 3.0 Record Consultation
--- ============================================================================
 
-CREATE OR REPLACE FUNCTION clinic.save_consultation(
-    p_consultation_id INT DEFAULT NULL,
-    p_student_number VARCHAR(10) DEFAULT NULL,
-    p_attended_by INT DEFAULT NULL,
-    p_chief_complaint TEXT DEFAULT NULL,
-    p_diagnosis TEXT DEFAULT '',
-    p_treatment_notes TEXT DEFAULT NULL,
-    p_vitals_bp VARCHAR(10) DEFAULT NULL,
-    p_vitals_temp DECIMAL(4,1) DEFAULT NULL,
-    p_vitals_pulse INT DEFAULT NULL,
-    p_vitals_weight DECIMAL(5,1) DEFAULT NULL,
-    p_status VARCHAR(20) DEFAULT 'ongoing'
-)
-RETURNS INT
-LANGUAGE plpgsql
-VOLATILE
-SECURITY DEFINER
-SET search_path = clinic, public
-AS $$
-DECLARE
-    v_consultation_id INT;
-BEGIN
-    IF p_consultation_id IS NULL THEN
-        IF p_student_number IS NULL OR p_attended_by IS NULL THEN
-            RAISE EXCEPTION 'student_number and attended_by are required for a new consultation';
-        END IF;
-
-        INSERT INTO clinic.consultations (
-            student_number, attended_by, chief_complaint, diagnosis, treatment_notes,
-            vitals_bp, vitals_temp, vitals_pulse, vitals_weight, status
-        )
-        VALUES (
-            p_student_number, p_attended_by, p_chief_complaint,
-            clinic.encrypt_data(COALESCE(p_diagnosis, '')),
-            clinic.encrypt_data(p_treatment_notes),
-            p_vitals_bp, p_vitals_temp, p_vitals_pulse, p_vitals_weight, p_status
-        )
-        RETURNING consultation_id INTO v_consultation_id;
-    ELSE
-        UPDATE clinic.consultations c
-        SET chief_complaint = COALESCE(p_chief_complaint, c.chief_complaint),
-            diagnosis = CASE WHEN p_diagnosis IS NULL THEN c.diagnosis ELSE clinic.encrypt_data(p_diagnosis) END,
-            treatment_notes = CASE WHEN p_treatment_notes IS NULL THEN c.treatment_notes ELSE clinic.encrypt_data(p_treatment_notes) END,
-            vitals_bp = COALESCE(p_vitals_bp, c.vitals_bp),
-            vitals_temp = COALESCE(p_vitals_temp, c.vitals_temp),
-            vitals_pulse = COALESCE(p_vitals_pulse, c.vitals_pulse),
-            vitals_weight = COALESCE(p_vitals_weight, c.vitals_weight),
-            status = COALESCE(p_status, c.status)
-        WHERE c.consultation_id = p_consultation_id
-        RETURNING c.consultation_id INTO v_consultation_id;
-
-        IF v_consultation_id IS NULL THEN
-            RAISE EXCEPTION 'Consultation % does not exist', p_consultation_id;
-        END IF;
-    END IF;
-
-    RETURN v_consultation_id;
-END;
-$$;
-
--- ============================================================================
--- 4.0 Issue Prescription
--- ============================================================================
-
-CREATE OR REPLACE FUNCTION clinic.issue_prescription(
-    p_consultation_id INT,
-    p_prescribed_by INT,
-    p_prescription_details TEXT,
-    p_notes TEXT DEFAULT NULL
-)
-RETURNS INT
-LANGUAGE plpgsql
-VOLATILE
-SECURITY DEFINER
-SET search_path = clinic, public
-AS $$
-DECLARE
-    v_prescription_id INT;
-BEGIN
-    INSERT INTO clinic.prescriptions (consultation_id, prescribed_by, prescription_details, notes)
-    VALUES (
-        p_consultation_id,
-        p_prescribed_by,
-        clinic.encrypt_data(p_prescription_details),
-        clinic.encrypt_data(p_notes)
-    )
-    RETURNING prescription_id INTO v_prescription_id;
-
-    RETURN v_prescription_id;
-END;
-$$;
 
 -- ============================================================================
 -- 5.0 Dispense Medicine
@@ -641,10 +547,7 @@ GRANT EXECUTE ON FUNCTION clinic.update_account(
 ) TO clinic_app;
 GRANT EXECUTE ON FUNCTION clinic.deactivate_account(INT) TO clinic_app;
 GRANT EXECUTE ON FUNCTION clinic.check_in_qr(UUID) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.save_consultation(
-    INT, VARCHAR(10), INT, TEXT, TEXT, TEXT, VARCHAR(10), NUMERIC, INT, NUMERIC, VARCHAR(20)
-) TO clinic_app;
-GRANT EXECUTE ON FUNCTION clinic.issue_prescription(INT, INT, TEXT, TEXT) TO clinic_app;
+
 GRANT EXECUTE ON FUNCTION clinic.dispense_medicine(INT, INT, INT, INT) TO clinic_app;
 GRANT EXECUTE ON FUNCTION clinic.request_clearance(VARCHAR(10), INT, VARCHAR(100)) TO clinic_app;
 GRANT EXECUTE ON FUNCTION clinic.decide_clearance(INT, INT, VARCHAR(20), TEXT, DATE) TO clinic_app;
